@@ -1,20 +1,16 @@
 [
 {
-	"type": "pick", "name": "LV624 Potential Path",
-	"choices": [
-		{ "type": "def", "values": { "mainpath": "left"   } },
-		{ "type": "def", "values": { "mainpath": "bridge" } },
-		{ "type": "def", "values": { "mainpath": "right"  } }
-	]
-},
-{
-	"type": "pick", "name": "LV624 Global Event",
-	"weights": [ 2, 4, 2, 2 ],
-	"choices": [
-		{ "type": "def", "values": { "lvevent": "none"       } },
-		{ "type": "def", "values": { "lvevent": "last_stand" } },
-		{ "type": "def", "values": { "lvevent": "fallen_ship", "mainpath": "bridge"  } },
-		{ "type": "def", "values": { "lvevent": "fallen_ship", "mainpath": "right" } }
-	]
+    "type": "pick",
+    "weights": [6, 4],
+    "choices": [
+        { "type": "branch", "nodes": [
+            { "type": "def-pick", "param": "lvevent", "value": ["none", "last_stand", "last_stand"] },
+            { "type": "def-pick", "param": "mainpath", "value": ["left", "bridge", "right"] }
+        ] },
+        { "type": "branch", "nodes": [
+            { "type": "def", "param": "lvevent", "value": "fallen_ship" },
+            { "type": "def-pick", "param": "mainpath", "value": ["bridge", "right"] }
+        ] }
+    ]
 }
 ]

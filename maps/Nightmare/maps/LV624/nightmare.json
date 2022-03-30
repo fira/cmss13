@@ -1,0 +1,42 @@
+[
+	{
+		"type": "map_insert",
+		"landmark": "clfship",
+		"prob": 20,
+		"path": "standalone/clfship.dmm",
+		"if": [ ["lvevent", "==", "fallen_ship"] ]
+	},
+	{
+		"type": "map_insert",
+		"landmark": "lv-skylight",
+		"prob": 15,
+		"path": "standalone/laststand.dmm",
+		"if": [ ["lvevent", "==", "last_stand"] ]
+	},
+	{
+		"type": "map_insert",
+		"landmark": "lv-leftsidepass",
+		"prob": 70,
+		"path": "standalone/leftsidepass.dmm",
+		"if": [ ["mainpath", "==", "left"] ]
+	},
+	{
+		"type": "pick", "name": "Bridge gap variation",
+		"choices": [
+			{ "type": "map_insert", "landmark": "lv-bridge-nofog", "path": "standalone/lv-bridge-nofog.dmm" },
+			{ "type": "map_insert", "landmark": "lv-bridge-east",  "path": "standalone/lv-bridge-east.dmm"  }
+		], "prob": 60,
+		"if": [ ["mainpath", "==", "bridge"] ]
+	},
+	{
+		"type": "map_insert",
+		"landmark": "lv-rightsidepass",
+		"prob": 70,
+		"path": "standalone/rightsidepass.dmm",
+		"if": [ ["mainpath", "==", "right"] ]
+	},
+	{
+		"type": "include", "name": "Standalone variations",
+		"file": "maps/Nightmare/maps/LV624/variations.json"
+	}
+]
