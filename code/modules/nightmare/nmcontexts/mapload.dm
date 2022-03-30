@@ -1,23 +1,17 @@
-/// Handles mapload tasks, then initializing map
-/datum/nmtask/sync/mapinit
-	name = "mapinit"
+/// Global context for map loading operations
+/datum/nmcontext/mapload
+	name = "mapload context"
 
-/datum/nmtask/sync/mapinit/execute()
+/datum/nmcontext/mapload/execute_tasks()
 	. = ..()
-	if(. == NM_TASK_OK)
-		postload()
+	initmap()
 
-/datum/nmtask/sync/mapinit/proc/postload()
-	SHOULD_NOT_SLEEP(TRUE)
+/datum/nmcontext/mapload/proc/initmap()
 	makepowernets()
 	repopulate_sorted_areas()
-	patch_lighting()
-
-/datum/nmtask/sync/mapinit/proc/patch_lighting()
 	var/list/turf/tainted = list()
-
-	for(var/datum/nmtask/mapload/LT in finished)
-		if(finished[LT] != NM_TASK_OK)
+	for(var/datum/nmtask/mapload/LT in tasks)
+		if(LT.status != NM_TASK_OK)
 			continue
 		if(!LT?.pmap || length(LT.pmap.bounds) < 6)
 			continue
@@ -26,7 +20,7 @@
 								locate(bounds[MAP_MAXX], bounds[MAP_MAXY], bounds[MAP_MAXZ]))
 		tainted |= TT
 
-	for(var/turf/T in tainted)
+	for(var/turf/T as anything in tainted)
 		var/area/A = T.loc
 		if(!A?.lighting_use_dynamic)
 			continue

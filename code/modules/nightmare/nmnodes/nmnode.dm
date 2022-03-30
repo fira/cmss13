@@ -1,58 +1,67 @@
-/// A nmnode represents an entry from the JSON configuration, which can be an action, control flow, etc
+/// Nightmare Configuration Entry, which can result in an action, just be control flow, etc
 /datum/nmnode
-	/// Node name - optional
-	var/name = "Abstract Node"
-	/// Chance to occur as a factor of 1, if not rolled the node is skipped
-	var/chance
-	/// Chaos - global randomness modifier, usually used as power of non-occurence
-	var/chaos
-	/// Conditions - an associative list of required values in scenario storage to apply
-	var/list/conditions
-
-/**
- * nodespec are parsed JSON hash values read from file
- * attributes:
- *  - name: optional
- *  - chance: p-value of this node being entierly skipped
- *  - when: hash of values required for this to be used
- */
-/datum/nmnode/New(datum/nmreader/reader, list/nodespec)
-	. = ..()
-	if(nodespec["name"])
-		name  = nodespec["name"]
-	if(isnum(nodespec["chance"]))
-		chance = nodespec["chance"]
-	if(nodespec["when"])
-		conditions = nodespec["when"]
+	/// Unique identifier for referencing in JSON configuration
+	var/id = "abstract"
+	/// Node identifier for debug & display
+	var/name = "abstract node"
+	/// Probability to take effect in percent upon resolve - otherwise the node is skipped and has no effect
+	var/proba = 100
+	/// Required scenario values for this to apply under the form: list(PARAMETER NAME, OPERATOR TYPE, VALUE)
+	var/list/list/conditions
 
 /datum/nmnode/Destroy()
 	conditions = null
 	return ..()
 
-/**
- * Go through any child nodes if applicable,
- * and queue actions as needed
- */
-/datum/nmnode/proc/resolve(datum/nmcontext/context)
+/datum/nmnode/New(list/spec)
+	. = ..()
+	if(spec["name"])
+		name  = spec["name"]
+	if(isnum(spec["prob"]))
+		proba = spec["prob"]
+	if(spec["if"])
+		var/list/jsondata = spec["if"]
+		conditions = jsondata.Copy()
+
+/// Resolves node within the environment, affecting context - usually by queuing tasks
+/datum/nmnode/proc/resolve(datum/nmcontext/context, list/statsmap)
 	SHOULD_NOT_SLEEP(TRUE)
-	SHOULD_CALL_PARENT(TRUE)
-	if(isnum(chance))
-		var/eff_chance = Clamp(chance, 0, 1)
-		if(isnum(context.scenario["chaos"]))
-			eff_chance = 1 - (1 - eff_chance) ** context.scenario["chaos"]
-		if(eff_chance < rand())
-			return
-	if(conditions)
-		for(var/key in conditions)
-			if(conditions[key] != context.scenario[key])
-				return
+	if(!prob(proba))
+		return FALSE
+	if(!check(context))
+		return FALSE
 	return TRUE
 
-/// Convenience wrapper for logging
-/datum/nmnode/proc/logself(message, critical = FALSE, prefix)
-	if(!critical && !CONFIG_GET(flag/nightmare_debug))
-		return
-	if(prefix)
-		log_debug("NMNODE \[[prefix]\] \[[name]\]: [message]")
-		return
-	log_debug("NMNODE \[[name]\]: [message]")
+/// Helper to get relevant scenario value from input
+/datum/nmnode/proc/get_scenario_value(datum/nmcontext/context, parameter_name)
+	var/modifier = copytext(parameter_name, 1, 2)
+	var/datum/nmcontext/relevant_context = context
+	if(modifier == "$") // Get value from global context instead
+		parameter_name = copytext(parameter_name, 2)
+		relevant_context = SSnightmare.contexts[NM_CTX_GLOBAL]
+	return relevant_context?.scenario[parameter_name]
+
+/// Check whether this node applies in a given context
+/datum/nmnode/proc/check(datum/nmcontext/context)
+	for(var/list/cond as anything in conditions)
+		var/param = cond[1]
+		var/op = cond[2]
+		var/value = cond[3]
+		var/sval = context.scenario[param]
+		var/negate = FALSE
+		var/result = FALSE
+		if(op[1] == "!")
+			negate = TRUE
+			op = splicetext(op, 1, 2)
+		switch(op)
+			if("defined") if(sval == null) result = FALSE
+			if(">") if(sval > value) result = TRUE
+			if("<") if(sval < value) result = TRUE
+			if("in") if(sval in value) result = TRUE
+			if("==") if(sval == value) result = TRUE
+		if(negate)
+			result = !result
+		if(!result)
+			NMLOG(NM_LOG_INFO, "Node [name] skipped by condition: [param] [op] [value]")
+			return FALSE
+	return TRUE

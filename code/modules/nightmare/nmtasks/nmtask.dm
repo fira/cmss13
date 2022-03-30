@@ -1,38 +1,56 @@
-/// Generic task
+/// Nightmare task, executing code within a nightmare context
 /datum/nmtask
 	/// Task name
-	var/name
+	var/name = "abstract task"
 
-/// Performs work, returning status as boolean
-/datum/nmtask/proc/execute()
+/datum/nmtask/New(name)
+	. = ..()
+	if(name)
+		src.name = name
+
+/datum/nmtask/Destroy()
+	cleanup()
+	return ..()
+
+/// Free resources used by the task and its state, without deleting it
+/datum/nmtask/proc/cleanup()
+	return
+
+/// Task implementation
+/datum/nmtask/proc/execute(list/statsmap)
 	PROTECTED_PROC(TRUE)
 	return NM_TASK_OK
 
-/**
- * Call wrapper for executing the task
- * Very important note that the whole thing relies on this single one *NOT* crashing
- * as it's our mechanism for handling sleeps, or crashes within task implements.
- * This ensures something is always returned eventually and tasks are not left dangling.
- * 
- * Intended usage is to call it from a waitfor=0 wrapper, passing a callback
- * If the task sleeps, invoke() early-returns NM_TASK_ASYNC and keeps following it
- * Once it effectively finishes, the provided callback receives result.
- *
- * Do note that on_completion is completion of invocation, not task
- */
-/datum/nmtask/proc/invoke(datum/callback/on_completion)
-	SHOULD_NOT_OVERRIDE(TRUE)
+/// Wrapper Invoking the task synchronously while reporting if task is actually ran async
+/datum/nmtask/proc/invoke_sync(list/statsmap = list())
+	PRIVATE_PROC(TRUE)
 	. = NM_TASK_ASYNC
-	. = execute()
-	if(. == NM_TASK_ASYNC) // No explicit detach, clunky to handle
+	. = execute(statsmap)
+	if(. == NM_TASK_ASYNC)
 		. = NM_TASK_ERROR
-	on_completion?.Invoke(.)
+	switch(.)
+		if(NM_TASK_OK)
+			LAZYINC(statsmap, "tasks_ok", 1)
+		if(NM_TASK_CONTINUE, NM_TASK_PAUSE)
+			return
+		else
+			LAZYINC(statsmap, "tasks_err", 1)
 
-/// Logging wrapper
-/datum/nmtask/proc/logself(message, critical = FALSE, prefix)
-	if(!critical && !CONFIG_GET(flag/nightmare_debug))
+/// Wrapper to invoke the task asynchronously, reporting result by callback
+/datum/nmtask/proc/invoke(datum/callback/async_callback, list/statsmap)
+	set waitfor = FALSE
+	. = wrap_async(async_callback, statsmap)
+
+/// Internal Wrapper for asynchronous call
+/datum/nmtask/proc/wrap_async(datum/callback/async_callback, list/statsmap)
+	PRIVATE_PROC(TRUE)
+	. = NM_TASK_ASYNC
+	var/retval = invoke_sync(statsmap)
+	// NM_TASK_SYNC is important here to report on ordering
+	// if the task executes async, this returns, then the callback is invoked
+	// if the task executes sync, the callback has -already- been invoked when this returns
+	if(async_callback)
+		. = NM_TASK_SYNC
+		async_callback.Invoke(retval)
 		return
-	if(prefix)
-		log_debug("NMTASK  \[[prefix]\] \[[name]\]: [message]")
-		return
-	log_debug("NMTASK \[[name]\]: [message]")
+	return retval

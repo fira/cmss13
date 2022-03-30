@@ -59,7 +59,8 @@
 	if(!insert_tag) return
 	if(!replace && GLOB.nightmare_landmarks[insert_tag])
 		return
-	GLOB.nightmare_landmarks[insert_tag] = get_turf(src)
+	var/turf/T = get_turf(src)
+	GLOB.nightmare_landmarks[insert_tag] = T
 /obj/effect/landmark/nightmare/Destroy()
 	if(insert_tag && autoremove \
 	   && GLOB.nightmare_landmarks[insert_tag] == get_turf(src))

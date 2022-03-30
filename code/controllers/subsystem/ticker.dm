@@ -50,13 +50,6 @@ SUBSYSTEM_DEF(ticker)
 
 /datum/controller/subsystem/ticker/Initialize(timeofday)
 	load_mode()
-
-	if(CONFIG_GET(flag/nightmare_enabled))
-		NM = new
-		if(!NM.init_config() || !NM.init_scenario())
-			QDEL_NULL(NM)
-			log_debug("TICKER: Error during Nightmare Init, aborting")
-
 	var/all_music = CONFIG_GET(keyed_list/lobby_music)
 	var/key = SAFEPICK(all_music)
 	if(key)
@@ -86,10 +79,11 @@ SUBSYSTEM_DEF(ticker)
 				var/mob/new_player/player = i
 				if(player.ready) // TODO: port this     == PLAYER_READY_TO_PLAY)
 					++totalPlayersReady
+
 			if(time_left < 0 || delay_start)
 				return
 
-			time_left -= wait
+			time_left = max(time_left - wait, 0)
 
 			if(time_left <= 40 SECONDS && !tipped)
 				send_tip_of_the_round()
@@ -98,6 +92,9 @@ SUBSYSTEM_DEF(ticker)
 
 			if(time_left <= 0)
 				request_start()
+			else if(time_left < (CONFIG_GET(number/nightmare_lobby_init_time) * 1 SECONDS))
+				if(SSnightmare?.status == NM_STATUS_WAIT)
+					SSnightmare.start_nightmare()
 
 		if(GAME_STATE_PLAYING)
 			mode.process(wait * 0.1)
@@ -119,51 +116,25 @@ SUBSYSTEM_DEF(ticker)
 					handle_map_reboot()
 				Master.SetRunLevel(RUNLEVEL_POSTGAME)
 
-/// Attempt to start game asynchronously if applicable
+/// Attempt to start game if applicable
 /datum/controller/subsystem/ticker/proc/request_start(skip_nightmare = FALSE)
-	if(current_state != GAME_STATE_PREGAME)
-		return FALSE
+	time_left = 0
 
 	if(!CONFIG_GET(flag/nightmare_enabled))
 		skip_nightmare = TRUE
-		QDEL_NULL(NM)
+	if(current_state <= GAME_STATE_SETTING_UP && !skip_nightmare)
+		if(!SSnightmare.start_nightmare())
+			return FALSE // Still ongoing
 
-	current_state = GAME_STATE_SETTING_UP
-	if(!skip_nightmare)
-		setup_nightmare()
-	else
-		INVOKE_ASYNC(src, .proc/setup_start)
-
-	for(var/client/C in GLOB.admins)
-		remove_verb(C, roundstart_mod_verbs)
-	admin_verbs_mod -= roundstart_mod_verbs
-
+	if(current_state >= GAME_STATE_SETTING_UP)
+		return FALSE
+	INVOKE_ASYNC(src, .proc/setup_start)
 	return TRUE
-
-/// Request to start nightmare setup before moving on to regular setup
-/datum/controller/subsystem/ticker/proc/setup_nightmare()
-	PRIVATE_PROC(TRUE)
-	if(NM && !NM.done)
-		RegisterSignal(SSdcs, COMSIG_GLOB_NIGHTMARE_SETUP_DONE, .proc/nightmare_setup_done)
-		if(!NM.start_setup())
-			QDEL_NULL(NM)
-			INVOKE_ASYNC(src, .proc/setup_start)
-		return
-	INVOKE_ASYNC(src, .proc/setup_start)
-
-/// Catches nightmare result to proceed to game start
-/datum/controller/subsystem/ticker/proc/nightmare_setup_done(_, datum/nmcontext/ctx, retval)
-	SIGNAL_HANDLER
-	PRIVATE_PROC(TRUE)
-	if(ctx != NM)
-		return
-	if(retval != NM_TASK_OK)
-		QDEL_NULL(NM)
-	INVOKE_ASYNC(src, .proc/setup_start)
 
 /// Try to effectively setup gamemode and start now
 /datum/controller/subsystem/ticker/proc/setup_start()
 	PRIVATE_PROC(TRUE)
+	current_state = GAME_STATE_SETTING_UP
 	Master.SetRunLevel(RUNLEVEL_SETUP)
 	setup_failed = !setup()
 	if(setup_failed)
@@ -172,7 +143,10 @@ SUBSYSTEM_DEF(ticker)
 		start_at = world.time + (CONFIG_GET(number/lobby_countdown) * 10)
 		Master.SetRunLevel(RUNLEVEL_LOBBY)
 		return FALSE
-	return TRUE
+	. = TRUE
+	for(var/client/C in GLOB.admins)
+		remove_verb(C, roundstart_mod_verbs)
+		admin_verbs_mod -= roundstart_mod_verbs
 
 /datum/controller/subsystem/ticker/proc/handle_map_reboot()
 	addtimer(CALLBACK(

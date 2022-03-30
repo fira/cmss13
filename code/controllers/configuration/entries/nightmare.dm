@@ -6,10 +6,19 @@
 /datum/config_entry/flag/nightmare_debug
 	config_entry_value = TRUE
 
-/// Relative path for map inclusion
-/datum/config_entry/string/nightmare_map_path
-	config_entry_value = "maps/"
+/// Relative path for global nightmare scenario
+/datum/config_entry/string/nightmare_global_scenario
+	config_entry_value = "config/nightmare-scenario.json"
 
-/// Relative path for nightmare configuration files
-/datum/config_entry/string/nightmare_config_path
-	config_entry_value = "maps/Nightmare/"
+/// Relative path for global nightmare actions
+/datum/config_entry/string/nightmare_global_actions
+	config_entry_value = "config/nightmare-actions.json"
+
+/// How long before game start to kick off nightmare processing, in seconds
+/datum/config_entry/number/nightmare_lobby_init_time
+	config_entry_value = 30
+
+/// Timeout after which to give up on nightmare for game start
+
+/datum/config_entry/number/nightmare_timeout
+	config_entry_value = 60

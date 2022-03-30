@@ -1,22 +1,37 @@
-/*
- * In scenario mode we just handle pre-setup of global choices
- */
-
-
-/// Sets a value in scenario variables, mainly for use with 'when'
-/datum/nmnode/scenario/def
+/// Sets a value in scenario variables
+/datum/nmnode/def
+	id = "def"
 	name = "Scenario Def"
-	var/list/hash = list()
-/datum/nmnode/scenario/def/New(datum/nmreader/parser, list/nodespec)
+	var/pname
+	var/pval
+/datum/nmnode/def/New(list/spec)
 	. = ..()
-	var/list/params = nodespec["values"]
-	if(islist(params))
-		hash = params.Copy()
-/datum/nmnode/scenario/def/Destroy()
-	hash = null
+	pname = spec["param"]
+	pval = spec["value"]
+	if(islist(pval))
+		var/list/pval_list = pval
+		pval = pval_list.Copy()
+/datum/nmnode/def/Destroy()
+	pname = null
+	pval = null
 	return ..()
-/datum/nmnode/scenario/def/resolve(datum/nmcontext/context)
+/datum/nmnode/def/resolve(datum/nmcontext/context)
 	. = ..()
 	if(!.) return
-	for(var/key in hash)
-		context.scenario[key] = hash[key]
+	if(context.scenario[pname])
+		NMLOG(NM_LOG_WARN, "Definition is redefining parameter '[pname]' !")
+	context.scenario[pname] = get_initialization_value()
+/datum/nmnode/def/proc/get_initialization_value()
+	return pval
+
+/datum/nmnode/def/pick
+	id = "def-pick"
+/datum/nmnode/def/pick/get_initialization_value()
+	return pick(pval)
+
+/datum/nmnode/def/range
+	id = "def-range"
+/datum/nmnode/def/range/get_initialization_value()
+	var/upper = pval[2]
+	var/lower = pval[1]
+	return lower + round((upper-lower+1) * rand())
