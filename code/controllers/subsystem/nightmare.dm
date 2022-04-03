@@ -80,9 +80,7 @@ SUBSYSTEM_DEF(nightmare)
 			if(MC_TICK_CHECK) return // Traditional pause mode, MC will resume us
 		else if(TICK_CHECK)   return // Best effort mode, just pretend we're done
 
-		var/list/statsmap = list()
-		var/retval = scheduler.invoke(null, statsmap)
-		mergeListsSum(stats, statsmap)
+		var/retval = scheduler.invoke(null, stats)
 		switch(retval)
 			if(NM_TASK_OK)
 				summary = TRUE

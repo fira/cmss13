@@ -3,7 +3,7 @@
 	{ "type": "map_variations",   "landmark": "lv-centralcaves", "path": "centralcaves/", "prob": 60 },
 	{ "type": "map_variations",   "landmark": "crashed-ship",    "path": "crashedship/",  "prob": 60 },
 	{ "type": "map_variations",   "landmark": "storage-crashed-ship", "path": "storage-crashed-ship/",   "prob": 60 },
-	{ "type": "map_variations",   "landmark": "lv-medbay",       "path": "medbay/",                      "prob": 40 },
+	{ "type": "map_variations",   "landmark": "lv-medbay",       "path": "medbay/",                      "prob": 100 },
 	{ "type": "map_variations",   "landmark": "lv-science",      "path": "science/",                     "prob": 50 },
 	{ "type": "map_variations",   "landmark": "armory",          "path": "armory/",                      "prob": 40 },
 	{ "type": "map_variations",   "landmark": "maintemple",      "path": "maintemple/",                  "prob": 40 },

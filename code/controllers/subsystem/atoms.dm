@@ -25,7 +25,7 @@ SUBSYSTEM_DEF(atoms)
 	populate_seed_list()
 	return ..()
 
-/datum/controller/subsystem/atoms/proc/InitializeAtoms(list/atoms)
+/datum/controller/subsystem/atoms/proc/InitializeAtoms(list/atoms, debug = FALSE) // Revert this
 	if(initialized == INITIALIZATION_INSSATOMS)
 		return
 
@@ -38,6 +38,12 @@ SUBSYSTEM_DEF(atoms)
 		for(var/I in atoms)
 			var/atom/A = I
 			if(!(A.flags_atom & INITIALIZED))
+				if(debug)
+					var/turf/T = get_turf(A)
+					if(A.loc != T)
+						debug_log("Initializing \ref[A] ([A.type]) somewhere in ([A.x],[A.y],[A.z])")
+					else
+						debug_log("Initializing \ref[A] ([A.type]) at ([A.x],[A.y],[A.z])")
 				InitAtom(I, mapload_arg)
 				CHECK_TICK
 	else

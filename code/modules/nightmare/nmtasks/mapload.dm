@@ -9,6 +9,9 @@
 	var/turf/target_turf
 	var/step = 1
 
+	var/debugcounter = 0
+	var/running = FALSE
+
 /datum/nmtask/mapload/New(name, filepath, landmark, keep = FALSE)
 	. = ..()
 	src.filepath = filepath
@@ -25,13 +28,19 @@
 	return ..()
 
 /datum/nmtask/mapload/execute(list/statsmap)
+	log_debug("<[debugcounter]> before step=[step] loaded=[loaded]")
+	if(running)
+		pass() // DUPLICATE CALL?????
+	running = TRUE
 	switch(step)
 		if(1) . = step_parse(statsmap)
 		if(2) . = step_loadmap(statsmap)
 		if(3) . = step_init(statsmap)
 		else
 			. = NM_TASK_ERROR
-	log_debug("step=[step] loaded=[loaded] return=[.]")
+	running = FALSE
+	log_debug("<[debugcounter]> now step=[step] loaded=[loaded] return=[.]")
+	debugcounter++
 
 /datum/nmtask/mapload/proc/step_parse(list/statsmap)
 	. = NM_TASK_ERROR
@@ -103,7 +112,7 @@
 	log_debug("3")
 	SSmapping.reg_in_areas_in_z(arealist)
 	log_debug("4")
-	SSatoms.InitializeAtoms(atomlist)
+	SSatoms.InitializeAtoms(atomlist, debug = TRUE)
 	log_debug("5")
 	// We still defer lighting, area sorting, etc
 	return TRUE
