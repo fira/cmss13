@@ -28,6 +28,7 @@ RUN make here
 # DM Build Env to be used in particular with juke if not running it locally
 FROM byond AS cm-builder
 RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
+COPY tools/docker/apt-node-prefs /etc/apt/preferences/
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs
 RUN DEBIAN_FRONTEND=noninteractive apt-get clean && rm -rf /var/lib/apt/lists/*
 
