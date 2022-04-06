@@ -32,13 +32,12 @@ COPY tools/docker/nodesource.gpg /usr/share/keyrings/nodesource.gpg
 COPY tools/docker/nodesource.list /etc/apt/sources.list.d/
 COPY tools/docker/apt-node-prefs /etc/apt/preferences/
 RUN DEBIAN_FRONTEND=noninteractive apt-get update
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs g++-multilib
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs yarn g++-multilib
 RUN DEBIAN_FRONTEND=noninteractive apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # TGUI deps pre-caching, thin out files to serve as basis for layer caching
 FROM node:${NODE_VERSION}-buster AS tgui-thin
-WORKDIR /tgui
-COPY tgui .
+COPY tgui /tgui
 RUN rm -rf docs public
 RUN find packages \! -name "package.json" -mindepth 2 -maxdepth 2 -print | xargs rm -rf
 
@@ -46,7 +45,7 @@ RUN find packages \! -name "package.json" -mindepth 2 -maxdepth 2 -print | xargs
 FROM node:${NODE_VERSION}-buster AS tgui-deps
 COPY --from=tgui-thin tgui /tgui
 WORKDIR /tgui
-RUN chmod u+x bin/tgui && bin/tgui --deps-only
+RUN yarn install --immutable
 
 # Stage actually building with juke if needed
 FROM cm-builder AS cm-build-standalone
