@@ -1,12 +1,16 @@
-# TODO: Replace 80% of that cache handling with juke tasks
-# so contributors can have reproducible test builds without needing docker...
-# Also will allow to properly handle building game in map checking mode
-
+# TODO: Use an .envfile and make everyone use it instead
 ARG BYOND_BASE_IMAGE=i386/ubuntu:bionic
-ARG BYOND_MAJOR=513
-ARG BYOND_MINOR=1542
-ARG NODE_VERSION=15
-ARG PYTHON_VERSION=3.7
+ARG UTILITY_BASE_IMAGE=alpine:3
+ARG PROJECT_NAME=ColonialMarinesALPHA
+ARG BYOND_MAJOR=514
+ARG BYOND_MINOR=1583
+ARG NODE_VERSION=17
+ARG PYTHON_VERSION=3.10
+ARG BYOND_UID=1000
+
+# BUILD_TYPE=standalone to build with juke in docker
+# BUILD_TYPE=deploy to directly use already built local files
+ARG BUILD_TYPE=deploy
 
 # Base BYOND image
 FROM --platform=linux/386 ${BYOND_BASE_IMAGE} AS byond
@@ -20,86 +24,45 @@ RUN curl ${BYOND_DOWNLOAD_URL} -o byond.zip \
 	&& rm -rf byond.zip
 WORKDIR /byond
 RUN make here
-RUN DEBIAN_FRONTEND=noninteractive apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Legacy GitLab CI packaging container, using pre-built game in pipeline
-FROM byond AS cm-runner
-ENV DREAMDAEMON_PORT=1400
-RUN mkdir -p /cm/data
-WORKDIR /cm
-COPY map_config map_config
-COPY maps maps
-COPY nano nano
-COPY librust_g.so .
-COPY tools/runner-entrypoint.sh /entrypoint.sh
-RUN chmod u+x /entrypoint.sh
-COPY ColonialMarinesALPHA.dmb application.dmb
-COPY ColonialMarinesALPHA.rsc application.rsc
-ENTRYPOINT ["/entrypoint.sh"]
-
-# Image used for building the game with DreamMaker
+# DM Build Env to be used in particular with juke if not running it locally
 FROM byond AS cm-builder
-ARG DM_PROJECT_NAME
-ARG PYTHON_VERSION
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y python${PYTHON_VERSION} python3-pip
-RUN pip3 install python-dateutil requests beautifulsoup4 pyyaml
+RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs
 RUN DEBIAN_FRONTEND=noninteractive apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# TGUI deps prep (cache stage - keep only base structure)
-FROM node:${NODE_VERSION}-buster AS tgui-thin
-WORKDIR /tgui
-COPY tgui .
-RUN rm -rf docs public
-RUN find packages \! -name "package.json" -mindepth 2 -maxdepth 2 -print | xargs rm -rf
-
-# TGUI deps fetch (cache stage - keep deps as standalone layer)
-FROM node:${NODE_VERSION}-buster AS tgui-deps
-COPY --from=tgui-thin tgui /tgui
-WORKDIR /tgui
-RUN chmod u+x bin/tgui && bin/tgui --deps-only
-
-# TGUI builder
-FROM node:${NODE_VERSION}-buster AS tgui-build
-WORKDIR /tgui
-COPY --from=tgui-deps /tgui/.yarn/cache .yarn/cache
-COPY tgui .
-RUN chmod u+x bin/tgui && bin/tgui --deps-check && bin/tgui
-RUN rm -rf .yarn/cache
-
-# More cache shenanigans, trim uneeded build context for layer caching DM build
-# this ensures modifying eg. dynamic maps don't force a game rebuild, as we just add them at end regardless
-# *.txt is the changelog date marker (uses gitlab project ID)
-FROM byond AS cm-cache
-COPY . /build
+# Stage actually building with juke if needed
+FROM cm-builder AS cm-build-standalone
+RUN mkdir /build
 WORKDIR /build
-RUN rm -rf tgui config strings maps map_config tools *.txt
-# Copy back the few files we need during DM build
-COPY maps/_basemap.dm maps/
-COPY maps/map_files/generic maps/map_files/generic
+COPY . .
+RUN ./tools/build/build
 
-# Actual game building stage. We include tgui here because it'll be packed in RSC file
-FROM cm-builder AS cm-build
-COPY --from=cm-cache /build /build
+# Helper Stage just packaging locally provided resources
+FROM ${UTILITY_BASE_IMAGE} AS cm-build-deploy
+RUN mkdir /build
 WORKDIR /build
-COPY --from=tgui-build /tgui/public tgui/public
-RUN source /byond/bin/byondsetup && DreamMaker ColonialMarinesALPHA.dme
+COPY tgui/public tgui/public
+COPY ${PROJECT_NAME}.dmb ${PROJECT_NAME}.dmb
+COPY ${PROJECT_NAME}.rsc ${PROJECT_NAME}.rsc
 
-# Deployment container piecing everything together for use
+# Deployment stage, piecing a workable game image
 FROM byond AS deploy
 ENV DREAMDAEMON_PORT=1400
 RUN mkdir -p /cm/data
 COPY tools/runner-entrypoint.sh /entrypoint.sh
 RUN chmod u+x /entrypoint.sh
-RUN useradd -ms /bin/bash byond
-RUN chown -R byond:byond /byond /cm /entrypoint.sh
+RUN useradd -u ${BYOND_UID} -ms /bin/bash byond
 WORKDIR /cm
-USER byond
 COPY librust_g.so .
 COPY config config
 COPY map_config map_config
 COPY strings strings
 COPY nano nano
 COPY maps maps
-COPY --from=cm-build /build/ColonialMarinesALPHA.rsc application.rsc
-COPY --from=cm-build /build/ColonialMarinesALPHA.dmb application.dmb
+COPY --from=cm-build-${BUILD_TYPE} /build/tgui/public tgui/public/
+COPY --from=cm-build-${BUILD_TYPE} /build/ColonialMarinesALPHA.dmb application.dmb
+COPY --from=cm-build-${BUILD_TYPE} /build/ColonialMarinesALPHA.rsc application.rsc
+RUN chown -R byond:byond /byond /cm /entrypoint.sh
+USER ${BYOND_UID}
 ENTRYPOINT [ "/entrypoint.sh" ]
