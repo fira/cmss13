@@ -29,6 +29,7 @@ RUN make here
 FROM byond AS cm-builder
 COPY tools/docker/nodesource.conf /etc/apt/sources.list.d/
 COPY tools/docker/apt-node-prefs /etc/apt/preferences/
+RUN curl -fsSL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | gpg --dearmor >> /usr/share/keyrings/nodesource.gpg
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y nodejs && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Stage actually building with juke if needed
