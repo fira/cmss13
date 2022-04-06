@@ -1,5 +1,5 @@
 # TODO: Use an .envfile and make everyone use it instead
-ARG BYOND_BASE_IMAGE=ubuntu:bionic
+ARG BYOND_BASE_IMAGE=ubuntu:jammy
 ARG UTILITY_BASE_IMAGE=alpine:3
 ARG PROJECT_NAME=ColonialMarinesALPHA
 ARG BYOND_MAJOR=514
