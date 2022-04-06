@@ -4,7 +4,7 @@ ARG UTILITY_BASE_IMAGE=alpine:3
 ARG PROJECT_NAME=ColonialMarinesALPHA
 ARG BYOND_MAJOR=514
 ARG BYOND_MINOR=1583
-ARG NODE_VERSION=17
+ARG NODE_VERSION=16
 ARG PYTHON_VERSION=3.10
 ARG BYOND_UID=1000
 
@@ -27,10 +27,9 @@ RUN make here
 
 # DM Build Env to be used in particular with juke if not running it locally
 FROM byond AS cm-builder
-RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash -
+COPY tools/docker/nodesource.conf /etc/apt/sources.list.d/
 COPY tools/docker/apt-node-prefs /etc/apt/preferences/
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs
-RUN DEBIAN_FRONTEND=noninteractive apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y nodejs && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Stage actually building with juke if needed
 FROM cm-builder AS cm-build-standalone
