@@ -35,11 +35,25 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs g++-multilib
 RUN DEBIAN_FRONTEND=noninteractive apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# TGUI deps pre-caching, thin out files to serve as basis for layer caching
+FROM node:${NODE_VERSION}-buster AS tgui-thin
+WORKDIR /tgui
+COPY tgui .
+RUN rm -rf docs public
+RUN find packages \! -name "package.json" -mindepth 2 -maxdepth 2 -print | xargs rm -rf
+
+# TGUI deps cache layer, actually gets the deps
+FROM node:${NODE_VERSION}-buster AS tgui-deps
+COPY --from=tgui-thin tgui /tgui
+WORKDIR /tgui
+RUN chmod u+x bin/tgui && bin/tgui --deps-only
+
 # Stage actually building with juke if needed
 FROM cm-builder AS cm-build-standalone
 RUN mkdir /build
 WORKDIR /build
 COPY . .
+COPY --from=tgui-deps /tgui/.yarn/cache tgui/.yarn/cache
 RUN ./tools/docker/juke-build.sh
 
 # Helper Stage just packaging locally provided resources
@@ -50,6 +64,9 @@ WORKDIR /build
 COPY tgui/public tgui/public
 COPY ${PROJECT_NAME}.dmb ${PROJECT_NAME}.dmb
 COPY ${PROJECT_NAME}.rsc ${PROJECT_NAME}.rsc
+
+# Alias for using either of the above
+FROM cm-build-${BUILD_TYPE} AS build-results
 
 # Deployment stage, piecing a workable game image
 FROM byond AS deploy
@@ -67,9 +84,9 @@ COPY map_config map_config
 COPY strings strings
 COPY nano nano
 COPY maps maps
-COPY --from=cm-build-${BUILD_TYPE} /build/tgui/public tgui/public/
-COPY --from=cm-build-${BUILD_TYPE} /build/${PROJECT_NAME}.dmb application.dmb
-COPY --from=cm-build-${BUILD_TYPE} /build/${PROJECT_NAME}.rsc application.rsc
+COPY --from=build-results /build/tgui/public tgui/public/
+COPY --from=build-results /build/${PROJECT_NAME}.dmb application.dmb
+COPY --from=build-results /build/${PROJECT_NAME}.rsc application.rsc
 RUN chown -R byond:byond /byond /cm /entrypoint.sh
 USER ${BYOND_UID}
 ENTRYPOINT [ "/entrypoint.sh" ]
