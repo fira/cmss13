@@ -15,7 +15,7 @@ ARG BUILD_TYPE=deploy
 # Base BYOND image
 FROM ${BYOND_BASE_IMAGE} AS byond
 SHELL ["/bin/bash", "-c"]
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y make man curl unzip libssl-dev:i386
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y make man curl unzip libssl:i386 libssl-dev
 ARG BYOND_MAJOR
 ARG BYOND_MINOR
 ARG BYOND_DOWNLOAD_URL=https://secure.byond.com/download/build/${BYOND_MAJOR}/${BYOND_MAJOR}.${BYOND_MINOR}_byond_linux.zip
