@@ -31,7 +31,7 @@ FROM byond AS cm-builder
 COPY tools/docker/nodesource.gpg /usr/share/keyrings/nodesource.gpg
 COPY tools/docker/nodesource.list /etc/apt/sources.list.d/
 COPY tools/docker/apt-node-prefs /etc/apt/preferences/
-RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y nodejs && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y nodejs build-essential build-essential:i386 && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Stage actually building with juke if needed
 FROM cm-builder AS cm-build-standalone
