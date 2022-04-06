@@ -38,7 +38,7 @@ FROM cm-builder AS cm-build-standalone
 RUN mkdir /build
 WORKDIR /build
 COPY . .
-RUN ./tools/build/build
+RUN ./tools/docker/juke-build.sh
 
 # Helper Stage just packaging locally provided resources
 FROM ${UTILITY_BASE_IMAGE} AS cm-build-deploy
@@ -52,7 +52,7 @@ COPY ${PROJECT_NAME}.rsc ${PROJECT_NAME}.rsc
 FROM byond AS deploy
 ENV DREAMDAEMON_PORT=1400
 RUN mkdir -p /cm/data
-COPY tools/runner-entrypoint.sh /entrypoint.sh
+COPY tools/docker/runner-entrypoint.sh /entrypoint.sh
 RUN chmod u+x /entrypoint.sh
 RUN useradd -u ${BYOND_UID} -ms /bin/bash byond
 WORKDIR /cm
