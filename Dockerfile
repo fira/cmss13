@@ -44,6 +44,7 @@ RUN ./tools/docker/juke-build.sh
 
 # Helper Stage just packaging locally provided resources
 FROM ${UTILITY_BASE_IMAGE} AS cm-build-deploy
+ARG PROJECT_NAME
 RUN mkdir /build
 WORKDIR /build
 COPY tgui/public tgui/public
@@ -52,6 +53,8 @@ COPY ${PROJECT_NAME}.rsc ${PROJECT_NAME}.rsc
 
 # Deployment stage, piecing a workable game image
 FROM byond AS deploy
+ARG PROJECT_NAME
+ARG BYOND_UID
 ENV DREAMDAEMON_PORT=1400
 RUN mkdir -p /cm/data
 COPY tools/docker/runner-entrypoint.sh /entrypoint.sh
@@ -65,8 +68,8 @@ COPY strings strings
 COPY nano nano
 COPY maps maps
 COPY --from=cm-build-${BUILD_TYPE} /build/tgui/public tgui/public/
-COPY --from=cm-build-${BUILD_TYPE} /build/ColonialMarinesALPHA.dmb application.dmb
-COPY --from=cm-build-${BUILD_TYPE} /build/ColonialMarinesALPHA.rsc application.rsc
+COPY --from=cm-build-${BUILD_TYPE} /build/${PROJECT_NAME}.dmb application.dmb
+COPY --from=cm-build-${BUILD_TYPE} /build/${PROJECT_NAME}.rsc application.rsc
 RUN chown -R byond:byond /byond /cm /entrypoint.sh
 USER ${BYOND_UID}
 ENTRYPOINT [ "/entrypoint.sh" ]
