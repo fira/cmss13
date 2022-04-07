@@ -49,10 +49,13 @@ RUN yarn install --immutable
 
 # Stage actually building with juke if needed
 FROM cm-builder AS cm-build-standalone
+ARG PROJECT_NAME
 RUN mkdir /build
 WORKDIR /build
-COPY . .
 COPY --from=tgui-deps /tgui/.yarn/cache tgui/.yarn/cache
+COPY . .
+# Force clear RSC due to BYOND shenanigans causing reuse
+RUN rm -f ${PROJECT_NAME}.rsc
 RUN ./tools/docker/juke-build.sh
 
 # Helper Stage just packaging locally provided resources
@@ -83,6 +86,7 @@ COPY map_config map_config
 COPY strings strings
 COPY nano nano
 COPY maps maps
+COPY html html
 COPY --from=build-results /build/tgui/public tgui/public/
 COPY --from=build-results /build/${PROJECT_NAME}.dmb application.dmb
 COPY --from=build-results /build/${PROJECT_NAME}.rsc application.rsc
