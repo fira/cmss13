@@ -1,6 +1,7 @@
 /.git
 /.gitlab-ci.yml
 /.github
+/.vscode
 /*.txt
 /bin
 /tmp
