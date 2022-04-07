@@ -47,15 +47,18 @@ COPY --from=tgui-thin tgui /tgui
 WORKDIR /tgui
 RUN yarn install --immutable
 
+# Game source cache stage: remove irrelevant dupes not dockerignored to prevent cache misses
+FROM ${UTILITY_BASE_IMAGE} AS source-cache
+COPY . /src
+WORKDIR /src
+RUN rm -rf *.rsc *.dmb
+
 # Stage actually building with juke if needed
 FROM cm-builder AS cm-build-standalone
 ARG PROJECT_NAME
-RUN mkdir /build
+COPY --from=source-cache /src /build
 WORKDIR /build
 COPY --from=tgui-deps /tgui/.yarn/cache tgui/.yarn/cache
-COPY . .
-# Force clear RSC due to BYOND shenanigans causing reuse
-RUN rm -f ${PROJECT_NAME}.rsc
 RUN ./tools/docker/juke-build.sh
 
 # Helper Stage just packaging locally provided resources
