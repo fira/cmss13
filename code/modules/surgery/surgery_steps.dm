@@ -1,4 +1,4 @@
-#define DEBUG_SURGERY_STEP FALSE
+#define DEBUG_SURGERY_STEP
 
 /datum/surgery_step
 	var/name
