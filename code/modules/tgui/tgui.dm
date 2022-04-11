@@ -54,7 +54,7 @@
  */
 /datum/tgui/New(mob/user, datum/src_object, interface, title, ui_x, ui_y)
 	log_tgui(user,
-		"new [interface] fancy [user?.client?.prefs.read_preference(/datum/preference/toggle/tgui_fancy)]",
+		"new [interface] fancy [user?.client?.prefs.tgui_fancy]",
 		src_object = src_object)
 	src.user = user
 	src.src_object = src_object
@@ -94,16 +94,14 @@
 	window.acquire_lock(src)
 	if(!window.is_ready())
 		window.initialize(
-			fancy = user.client.prefs.read_preference(/datum/preference/toggle/tgui_fancy),
+			fancy = user.client.prefs.tgui_fancy,
 			inline_assets = list(
 				get_asset_datum(/datum/asset/simple/tgui),
 			))
 	else
 		window.send_message("ping")
 	var/flush_queue = window.send_asset(get_asset_datum(
-		/datum/asset/simple/namespaced/fontawesome))
-	flush_queue |= window.send_asset(get_asset_datum(
-		/datum/asset/simple/namespaced/tgfont))
+		/datum/asset/simple/fontawesome))
 	for(var/datum/asset/asset in src_object.ui_assets(user))
 		flush_queue |= window.send_asset(asset)
 	if (flush_queue)
@@ -229,8 +227,8 @@
 		"window" = list(
 			"key" = window_key,
 			"size" = window_size,
-			"fancy" = user.client.prefs.read_preference(/datum/preference/toggle/tgui_fancy),
-			"locked" = user.client.prefs.read_preference(/datum/preference/toggle/tgui_lock),
+			"fancy" = user.client.prefs.tgui_fancy,
+			"locked" = user.client.prefs.tgui_lock,
 		),
 		"client" = list(
 			"ckey" = user.client.ckey,
@@ -275,7 +273,7 @@
 		return
 	// Update through a normal call to ui_interact
 	if(status != UI_DISABLED && (autoupdate || force))
-		src_object.ui_interact(user, src)
+		src_object.tgui_interact(user, src)
 		return
 	// Update status only
 	var/needs_update = process_status()
