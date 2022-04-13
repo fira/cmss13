@@ -94,7 +94,7 @@
 	window.acquire_lock(src)
 	if(!window.is_ready())
 		window.initialize(
-			fancy = user.client.prefs.tgui_fancy,
+			fancy = user.client?.prefs.tgui_fancy,
 			inline_assets = list(
 				get_asset_datum(/datum/asset/simple/tgui),
 			))
@@ -105,7 +105,7 @@
 	for(var/datum/asset/asset in src_object.ui_assets(user))
 		flush_queue |= window.send_asset(asset)
 	if (flush_queue)
-		user.client.browse_queue_flush()
+		user.client?.browse_queue_flush()
 	window.send_message("update", get_payload(
 		with_data = TRUE,
 		with_static_data = TRUE))
@@ -227,8 +227,8 @@
 		"window" = list(
 			"key" = window_key,
 			"size" = window_size,
-			"fancy" = user.client.prefs.tgui_fancy,
-			"locked" = user.client.prefs.tgui_lock,
+			"fancy" = user.client?.prefs.tgui_fancy,
+			"locked" = user.client?.prefs.tgui_lock,
 		),
 		"client" = list(
 			"ckey" = user.client.ckey,
