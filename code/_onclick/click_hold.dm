@@ -50,7 +50,8 @@
 		if(!isturf(T)) //If clickdragging something in your own inventory, it's probably a deliberate attempt to open something, tactical-reload, etc. Don't click it.
 			return		//'T' is actually 'location', and if it isn't a turf, the item is most likely a HUD screen or in inventory somewhere.
 
-		Click(A, T, skin_ctl, params)
+		if(skin_ctl)
+			Click(A, T, skin_ctl, params)
 
 /client/MouseUp(var/atom/A, var/turf/T, var/skin_ctl, var/params)
 	if(!A)

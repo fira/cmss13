@@ -20,7 +20,7 @@
 /client/Click(atom/A, location, control, params)
 	if (control && !ignore_next_click)	// No .click macros allowed, and only one click per mousedown.
 		ignore_next_click = TRUE
-		return usr.do_click(A, location, params)
+		click_queue = list(A, location, params)
 
 /mob/proc/do_click(atom/A, location, params)
 	// We'll be sending a lot of signals and things later on, this will save time.

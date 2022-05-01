@@ -97,6 +97,13 @@
 	///Are we locking our movement input?
 	var/movement_locked = FALSE
 
+	/// Queued keypresses (several)
+	var/list/keys_queue_down = list()
+	/// Queued keyreleases (several)
+	var/list/keys_queue_up = list()
+	/// Queued click for next tick (single: atom, location, params)
+	var/list/click_queue
+
 	///Used for limiting the rate of topic sends by the client to avoid abuse
 	var/list/topiclimiter
 

@@ -69,14 +69,8 @@
 			key_combos_held[_key] = full_key
 		else
 			full_key = _key
-	var/keycount = 0
-	for(var/kb_name in prefs.key_bindings[full_key])
-		keycount++
-		var/datum/keybinding/kb = GLOB.keybindings_by_name[kb_name]
-		if(kb.can_use(src) && kb.down(src) && keycount >= MAX_COMMANDS_PER_KEY)
-			break
 
-	admin_holder?.key_down(_key, src)
+	LAZYADD(src.keys_queue_down, full_key)
 	mob.focus?.key_down(_key, src)
 
 /client/verb/keyUp(_key as text)
@@ -98,15 +92,8 @@
 		if(!(next_move_dir_add & movement))
 			next_move_dir_sub |= movement
 
-	// We don't do full key for release, because for mod keys you
-	// can hold different keys and releasing any should be handled by the key binding specifically
-	for (var/kb_name in prefs.key_bindings[_key])
-		var/datum/keybinding/kb = GLOB.keybindings_by_name[kb_name]
-		if(kb.can_use(src) && kb.up(src))
-			break
-	admin_holder?.key_up(_key, src)
+	LAZYADD(src.keys_queue_up, _key)
 	mob.focus?.key_up(_key, src)
-
 
 /*
 // Called every game tick

@@ -635,3 +635,40 @@ GLOBAL_LIST_INIT(whitelisted_client_procs, list(
 	else
 		winset(src, "mainwindow", "is-maximized=false;can-resize=true;titlebar=true;menu=menu")
 	winset(src, "mainwindow", "is-maximized=true")
+
+
+/client/proc/handle_mouseclick()
+	set waitfor = FALSE
+	if(!click_queue)
+		return
+	var/list/clickdata = click_queue
+	click_queue = null
+	usr = mob
+	mob.do_click(clickdata[1], clickdata[2], clickdata[3])
+
+/client/proc/handle_keypresses()
+	set waitfor = FALSE
+	usr = mob
+	if(!prefs)
+		return
+
+	var/list/snapshot_down = keys_queue_down
+	var/list/snapshot_up = keys_queue_up
+	keys_queue_down = null
+	keys_queue_up = null
+
+	if(snapshot_up)
+		for(var/full_key as anything in snapshot_up)
+			for(var/kb_name in prefs.key_bindings[full_key])
+				var/datum/keybinding/kb = GLOB.keybindings_by_name[kb_name]
+				if(kb.can_use(src) && kb.up(src))
+					break
+
+	if(snapshot_down)
+		for(var/full_key as anything in snapshot_down)
+			var/keycount = 0
+			for(var/kb_name in prefs.key_bindings[full_key])
+				keycount++
+				var/datum/keybinding/kb = GLOB.keybindings_by_name[kb_name]
+				if(kb.can_use(src) && kb.down(src) && keycount >= MAX_COMMANDS_PER_KEY)
+					break

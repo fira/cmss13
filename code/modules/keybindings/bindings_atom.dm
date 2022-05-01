@@ -2,6 +2,8 @@
 // Only way to do that is to tie the behavior into the focus's keyLoop().
 
 /atom/movable/keyLoop(client/user)
+	usr = user.mob
+
 	var/movement_dir = NONE
 	for(var/_key in user.keys_held)
 		if(user.movement_keys[_key])
@@ -23,9 +25,6 @@
 
 	movement_dir = turn(movement_dir, -dir2angle(user.dir)) //By doing this we ensure that our input direction is offset by the client (camera) direction
 
-	// This is called from Subsystem, and as such usr is unset.
-	// You hopefully don't it but it might go against legacy code expectations.
-	usr = user.mob
 	if(user.movement_locked)
 		keybind_face_direction(movement_dir)
 	else

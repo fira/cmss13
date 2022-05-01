@@ -38,4 +38,6 @@ SUBSYSTEM_DEF(input)
 
 /datum/controller/subsystem/input/fire()
 	for(var/mob/user as anything in GLOB.player_list)
-		user.focus?.keyLoop(user.client)
+		user.focus?.keyLoop(user.client) // Handles defered movement with combining
+		user.client?.handle_keypresses() // Handles other defered macro key down/up
+		user.client?.handle_mouseclick() // Handles defered object clicking
