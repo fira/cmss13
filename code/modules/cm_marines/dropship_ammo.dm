@@ -123,8 +123,12 @@
 
 
 /// Adds default ammunition effect if no weapon logic to dictate otherwise
-/obj/structure/ship_ammo/proc/apply_default_warhead(datum/cas_firing_solution/FS)
+/obj/structure/ship_ammo/proc/setup_payload(datum/cas_firing_solution/FS)
 	return
+
+/obj/structure/ship_ammo/proc/deplete_ammo(qty = 1)
+	ammo_count -= qty * ammo_used_per_firing
+	return TRUE // discard ammo if falsey
 
 //30mm gun
 
@@ -150,8 +154,8 @@
 	else
 		return "It's loaded with an empty [name]."
 
-/obj/structure/ship_ammo/heavygun/apply_default_warhead(datum/cas_firing_solution/FS)
-	FS.AddComponent(/datum/component/cas_warhead_heavygun)
+/obj/structure/ship_ammo/heavygun/setup_payload(datum/cas_firing_solution/FS)
+	FS.AddComponent(/datum/component/cas_warhead_heavygun, 40, 4)
 
 /obj/structure/ship_ammo/heavygun/antitank
 	name = "PGU-105 30mm Anti-tank ammo crate"
@@ -162,7 +166,8 @@
 	max_ammo_count = 400
 	point_cost = 325
 	fire_mission_delay = 2
-	payload_type = /datum/cas_effect/ordnance/heavygun/antitank
+/obj/structure/ship_ammo/heavygun/antitank/setup_payload(datum/cas_firing_solution/FS)
+	FS.AddComponent(/datum/component/cas_warhead_heavygun, 40, 4, /datum/ammo/bullet/shrapnel/gau/at)
 
 //laser battery
 
@@ -184,6 +189,8 @@
 	point_cost = 200
 	fire_mission_delay = 4 //very good but long cooldown
 
+/obj/structure/ship_ammo/heavygun/laser_battery/setup_payload(datum/cas_firing_solution/FS)
+	FS.AddComponent(/datum/component/cas_warhead_laser)
 
 /obj/structure/ship_ammo/laser_battery/get_examine_text(mob/user)
 	. = ..()
@@ -213,9 +220,10 @@
 	max_inaccuracy = 5
 	point_cost = 0
 
-/obj/structure/ship_ammo/rocket/detonate_on(turf/impact)
+/obj/structure/ship_ammo/rocket/deplete_ammo()
+	// oneshot
 	qdel(src)
-
+	return FALSE
 
 //this one is air-to-air only
 /obj/structure/ship_ammo/rocket/widowmaker
@@ -227,11 +235,8 @@
 	point_cost = 300
 	fire_mission_delay = 4 //We don't care because our ammo has just 1 rocket
 
-/obj/structure/ship_ammo/rocket/widowmaker/detonate_on(turf/impact)
-	impact.ceiling_debris_check(3)
-	spawn(5)
-		cell_explosion(impact, 300, 40, EXPLOSION_FALLOFF_SHAPE_LINEAR, null, create_cause_data(initial(name), source_mob)) //Your standard HE splash damage rocket. Good damage, good range, good speed, it's an all rounder
-		qdel(src)
+/obj/structure/ship_ammo/rocket/widowmaker/setup_payload(datum/cas_firing_solution/FS)
+	FS.AddComponent(/datum/component/cas_warhead_explosive, 300, 40, EXPLOSION_FALLOFF_SHAPE_LINEAR)
 
 /obj/structure/ship_ammo/rocket/banshee
 	name = "\improper AGM-227 'Banshee'"
@@ -241,12 +246,9 @@
 	point_cost = 300
 	fire_mission_delay = 4 //We don't care because our ammo has just 1 rocket
 
-/obj/structure/ship_ammo/rocket/banshee/detonate_on(turf/impact)
-	impact.ceiling_debris_check(3)
-	spawn(5)
-		cell_explosion(impact, 175, 20, EXPLOSION_FALLOFF_SHAPE_LINEAR, null, create_cause_data(initial(name), source_mob)) //Small explosive power with a small fall off for a big explosion range
-		fire_spread(impact, create_cause_data(initial(name), source_mob), 4, 15, 50, "#00b8ff") //Very intense but the fire doesn't last very long
-		qdel(src)
+/obj/structure/ship_ammo/rocket/banshee/setup_payload(datum/cas_firing_solution/FS)
+	FS.AddComponent(/datum/component/cas_warhead_explosive, 175, 20, EXPLOSION_FALLOFF_SHAPE_LINEAR)
+	FS.AddComponent(/datum/component/cas_warhead_incendiary, 4, 15, 50, "#00b8ff")//Very intense but the fire doesn't last very long
 
 /obj/structure/ship_ammo/rocket/keeper
 	name = "\improper GBU-67 'Keeper II'"
@@ -257,11 +259,8 @@
 	point_cost = 300
 	fire_mission_delay = 4 //We don't care because our ammo has just 1 rocket
 
-/obj/structure/ship_ammo/rocket/keeper/detonate_on(turf/impact)
-	impact.ceiling_debris_check(3)
-	spawn(5)
-		cell_explosion(impact, 450, 100, EXPLOSION_FALLOFF_SHAPE_EXPONENTIAL, null, create_cause_data(initial(name), source_mob)) //Insane fall off combined with insane damage makes the Keeper useful for single targets, but very bad against multiple.
-		qdel(src)
+/obj/structure/ship_ammo/rocket/keeper/setup_payload(datum/cas_firing_solution/FS)
+	FS.AddComponent(/datum/component/cas_warhead_explosive, 450, 100, EXPLOSION_FALLOFF_SHAPE_EXPONENTIAL)
 
 /obj/structure/ship_ammo/rocket/harpoon
 	name = "\improper AGM-84 'Harpoon'"
@@ -273,11 +272,8 @@
 	fire_mission_delay = 4
 
 //Looks kinda OP but all it can actually do is just to blow windows and some of other things out, cant do much damage.
-/obj/structure/ship_ammo/rocket/harpoon/detonate_on(turf/impact)
-	impact.ceiling_debris_check(3)
-	spawn(5)
-		cell_explosion(impact, 150, 16, EXPLOSION_FALLOFF_SHAPE_LINEAR, null, create_cause_data(initial(name), source_mob))
-		qdel(src)
+/obj/structure/ship_ammo/rocket/harpoon/setup_payload(datum/cas_firing_solution/FS)
+	FS.AddComponent(/datum/component/cas_warhead_explosive, 150, 16, EXPLOSION_FALLOFF_SHAPE_LINEAR)
 
 /obj/structure/ship_ammo/rocket/napalm
 	name = "\improper XN-99 'Napalm'"
@@ -287,13 +283,9 @@
 	point_cost = 500
 	fire_mission_delay = 0 //0 means unusable
 
-/obj/structure/ship_ammo/rocket/napalm/detonate_on(turf/impact)
-	impact.ceiling_debris_check(3)
-	spawn(5)
-		cell_explosion(impact, 200, 25, EXPLOSION_FALLOFF_SHAPE_LINEAR, null, create_cause_data(initial(name), source_mob))
-		fire_spread(impact, create_cause_data(initial(name), source_mob), 6, 60, 30, "#EE6515") //Color changed into napalm's color to better convey how intense the fire actually is.
-		qdel(src)
-
+/obj/structure/ship_ammo/rocket/napalm/setup_payload(datum/cas_firing_solution/FS)
+	FS.AddComponent(/datum/component/cas_warhead_explosive, 200, 25, EXPLOSION_FALLOFF_SHAPE_LINEAR)
+	FS.AddComponent(/datum/component/cas_warhead_incendiary, 6, 60, 30, "#EE6515")
 
 
 //minirockets
@@ -312,19 +304,15 @@
 	point_cost = 300
 	fire_mission_delay = 3 //high cooldown
 
-/obj/structure/ship_ammo/minirocket/detonate_on(turf/impact)
-	impact.ceiling_debris_check(2)
-	spawn(5)
-		cell_explosion(impact, 200, 44, EXPLOSION_FALLOFF_SHAPE_LINEAR, null, create_cause_data(initial(name), source_mob))
-		var/datum/effect_system/expl_particles/P = new/datum/effect_system/expl_particles()
-		P.set_up(4, 0, impact)
-		P.start()
-		spawn(5)
-			var/datum/effect_system/smoke_spread/S = new/datum/effect_system/smoke_spread()
-			S.set_up(1,0,impact,null)
-			S.start()
-		if(!ammo_count && loc)
-			qdel(src) //deleted after last minirocket is fired and impact the ground.
+/obj/structure/ship_ammo/minirocket/setup_payload(datum/cas_firing_solution/FS)
+	FS.AddComponent(/datum/component/cas_warhead_explosive, 200, 44, EXPLOSION_FALLOFF_SHAPE_LINEAR)
+	FS.AddComponent(/datum/component/cas_warhead_pyrotechnics)
+
+/obj/structure/ship_ammo/minirocket/deplete_ammo()
+	. = ..()
+	if(ammo_count <= 0)
+		qdel(src)
+		return FALSE
 
 /obj/structure/ship_ammo/minirocket/show_loaded_desc(mob/user)
 	if(ammo_count)
@@ -342,10 +330,9 @@
 	point_cost = 500
 	fire_mission_delay = 3 //high cooldown
 
-/obj/structure/ship_ammo/minirocket/incendiary/detonate_on(turf/impact)
-	..()
-	spawn(5)
-		fire_spread(impact, create_cause_data(initial(name), source_mob), 3, 25, 20, "#EE6515")
+/obj/structure/ship_ammo/minirocket/incendiary/setup_payload(datum/cas_firing_solution/FS)
+	. = ..()
+	FS.AddComponent(/datum/component/cas_warhead_incendiary, 3, 25, 20, "#EE6515")
 
 /obj/structure/ship_ammo/sentry
 	name = "multi-purpose area denial sentry"
