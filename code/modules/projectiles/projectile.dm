@@ -811,6 +811,7 @@
 //----------------------------------------------------------
 
 /atom/proc/bullet_act(obj/item/projectile/P)
+	SHOULD_NOT_SLEEP(TRUE)
 	return FALSE
 
 /mob/dead/bullet_act(/obj/item/projectile/P)

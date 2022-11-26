@@ -16,6 +16,7 @@
 	standard 0 if fail
 */
 /mob/living/proc/apply_damage(var/damage = 0, var/damagetype = BRUTE, var/def_zone = null, var/used_weapon = null, var/sharp = 0, var/edge = 0, var/force = FALSE)
+	SHOULD_NOT_SLEEP(TRUE)
 	if(!damage)
 		return FALSE
 
