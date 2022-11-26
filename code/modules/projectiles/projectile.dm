@@ -843,7 +843,6 @@
 	L.bullet_act()
 	H.bullet_act()
 	X.bullet_act()
-	P.fly()
 	P.handle_mob()
 	L.apply_damage()
 	H.apply_damage()
@@ -854,6 +853,10 @@
 	L.updatehealth()
 	H.updatehealth()
 	X.updatehealth()
+	L.death()
+	H.death()
+	X.death()
+	X.handle_crit()
 
 
 /mob/living/carbon/human/bullet_act(obj/item/projectile/P)
