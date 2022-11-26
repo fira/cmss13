@@ -3,6 +3,7 @@
 	new /obj/effect/spawner/gibspawner/generic(get_turf(location),viruses,ml)
 
 /proc/hgibs(atom/location, var/list/viruses, var/mob/living/ml, var/fleshcolor, var/bloodcolor)
+	SHOULD_NOT_SLEEP(TRUE)
 	new /obj/effect/spawner/gibspawner/human(get_turf(location),viruses,ml,fleshcolor,bloodcolor)
 
 /proc/xgibs(atom/location, var/list/viruses)
@@ -43,6 +44,7 @@
 	qdel(src)
 
 /obj/effect/spawner/gibspawner/proc/Gib(var/list/viruses = list(), var/mob/living/ml = null)
+	SHOULD_NOT_SLEEP(TRUE)
 	if(gibtypes.len != gibamounts.len || gibamounts.len != gibdirections.len)
 		to_world(SPAN_DANGER("Gib list length mismatch!"))
 		return

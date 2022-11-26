@@ -60,7 +60,7 @@
 		spawn_turf = get_turf(body)				//Where is the body located?
 		attack_log = body.attack_log	//preserve our attack logs by copying them to our ghost
 		life_kills_total = body.life_kills_total //kills also copy over
-    
+
 		appearance = body.appearance
 		base_transform = matrix(body.base_transform)
 		body.alter_ghost(src)
@@ -272,6 +272,7 @@ Works together with spawning an observer, noted above.
 		hud_used = new /datum/hud/ghost(src)
 
 /mob/proc/ghostize(can_reenter_corpse = TRUE, aghosted = FALSE)
+	SHOULD_NOT_SLEEP(TRUE)
 	if(isaghost(src) || !key)
 		return
 	if(aghosted)

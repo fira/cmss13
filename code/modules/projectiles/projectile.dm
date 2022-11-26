@@ -834,6 +834,27 @@
 
 	SEND_SIGNAL(P, COMSIG_BULLET_ACT_LIVING, src, damage, damage)
 
+/proc/sleeptest1()
+	SHOULD_NOT_SLEEP(TRUE)
+	var/mob/living/L
+	var/mob/living/carbon/human/H
+	var/mob/living/carbon/Xenomorph/X
+	var/obj/item/projectile/P
+	L.bullet_act()
+	H.bullet_act()
+	X.bullet_act()
+	P.fly()
+	P.handle_mob()
+	L.apply_damage()
+	H.apply_damage()
+	X.apply_damage()
+	L.pain.apply_pain()
+	H.pain.apply_pain()
+	X.pain.apply_pain()
+	L.updatehealth()
+	H.updatehealth()
+	X.updatehealth()
+
 
 /mob/living/carbon/human/bullet_act(obj/item/projectile/P)
 	if(!P)

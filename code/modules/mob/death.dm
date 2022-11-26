@@ -21,6 +21,7 @@
 	return
 
 /mob/proc/spawn_gibs()
+	SHOULD_NOT_SLEEP(TRUE)
 	hgibs(loc, viruses, src)
 
 

@@ -1,4 +1,5 @@
 /mob/living/proc/updatehealth()
+	SHOULD_NOT_SLEEP(TRUE)
 	if(status_flags & GODMODE)
 		health = maxHealth
 		stat = CONSCIOUS
