@@ -50,12 +50,12 @@
 				return FIRE_MISSION_BAD_COOLDOWN
 			if(!record.weapon.ammo_equipped)
 				return FIRE_MISSION_WEAPON_OUT_OF_AMMO
-			if(record.weapon.ammo_equipped.fire_mission_delay == 0)
+			if(!(record.weapon.get_fire_modes() & CAS_MODE_FM))
 				return FIRE_MISSION_WEAPON_UNUSABLE
 			ammo_left -= record.weapon.ammo_equipped.ammo_used_per_firing
 			if(ammo_left < 0)
 				return FIRE_MISSION_WEAPON_OUT_OF_AMMO
-			cd = record.weapon.ammo_equipped.fire_mission_delay
+			cd = record.weapon.get_fm_stepping()
 		error_weapon = null
 
 	return FIRE_MISSION_ALL_GOOD//should be ok now
@@ -74,7 +74,7 @@
 		weapon_string += "mounted on [error_weapon.ship_base.name] "
 
 	if(code_id == FIRE_MISSION_BAD_COOLDOWN)
-		return "Weapon [weapon_string] requires interval of [error_weapon.ammo_equipped.fire_mission_delay] time units per shot."
+		return "Weapon [weapon_string] requires interval of [error_weapon.get_fm_stepping()] time units per shot."
 	if(code_id == FIRE_MISSION_BAD_OFFSET)
 		// Change this to using weapon's when it is implemented
 		var/obj/effect/attach_point/weapon/AW = error_weapon.ship_base

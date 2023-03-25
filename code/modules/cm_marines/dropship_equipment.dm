@@ -595,10 +595,12 @@
 
 
 
-/obj/structure/dropship_equipment/weapon/proc/deplete_ammo()
-	if(!ammo_equipped?.deplete_ammo())
+/obj/structure/dropship_equipment/weapon/proc/deplete_ammo(qty = 1)
+	RETURN_TYPE(/obj/structure/dropship_ammo)
+	if(!ammo_equipped?.deplete_ammo(qty))
 		ammo_equipped = null
 	update_icon()
+	return ammo_equipped
 
 /// Sets the firing solution guidance parameters (accuracy, travel time, etc)
 /obj/structure/dropship_equipment/weapon/proc/setup_guidance(datum/cas_firing_solution/FS)
@@ -638,7 +640,7 @@
 	FS.name = ammo_equipped.name
 	setup_payload(FS)
 	var/travelling_time = setup_guidance(FS)
-	FS.AddComponent(/datum/component/cas_roof_impact) // Ceiling debris and standard CAS protection
+	FS.AddComponent(/datum/component/cas_roof_impact, CEILING_NO_PROTECTION) // Ceiling debris. No ceiling can actually intercept the fired warhead, to preserve legacy CAS functionality
 	FS.AddComponent(/datum/component/cas_delayed_impact, travelling_time)
 	FS.AddComponent(/datum/component/cas_warning_dot)
 	if(ammo_equipped.warning_sound)
@@ -658,7 +660,7 @@
 	FS.name = ammo_equipped.name
 	setup_payload(FS)
 	setup_guidance(FS) // No travel time in FM
-	FS.AddComponent(/datum/component/cas_roof_impact) // Ceiling debris and standard CAS protection
+	FS.AddComponent(/datum/component/cas_roof_impact, CEILING_NO_PROTECTION) // Ceiling debris. No ceiling can actually intercept the fired warhead, to preserve legacy CAS functionality
 	FS.AddComponent(/datum/component/cas_delayed_impact, 1 SECONDS)
 	if(ammo_equipped.warning_sound)
 		FS.AddComponent(/datum/component/cas_inbound_sfx, 0, ammo_equipped.warning_sound, ammo_equipped.warning_sound_volume)
@@ -668,6 +670,11 @@
 	if(firing_sound)
 		playsound(loc, firing_sound, 70, 1)
 	last_fired = world.time
+
+/obj/structure/dropship_equipment/weapon/proc/get_fire_modes()
+	return ammo_equipped.get_fire_modes()
+/obj/structure/dropship_equipment/weapon/proc/get_fm_stepping()
+	return 1
 
 /obj/structure/dropship_equipment/weapon/heavygun
 	name = "\improper GAU-21 30mm cannon"
@@ -685,6 +692,8 @@
 		if(ship_base) icon_state = "30mm_cannon_installed"
 		else icon_state = "30mm_cannon"
 
+/obj/structure/dropship_equipment/weapon/heavygun/get_fm_stepping()
+	return 2
 
 /obj/structure/dropship_equipment/weapon/rocket_pod
 	name = "missile pod"
@@ -693,10 +702,6 @@
 	firing_sound = 'sound/effects/rocketpod_fire.ogg'
 	firing_delay = 5
 	point_cost = 600
-
-/obj/structure/dropship_equipment/weapon/rocket_pod/deplete_ammo()
-	ammo_equipped = null //nothing left to empty after firing
-	update_icon()
 
 /obj/structure/dropship_equipment/weapon/rocket_pod/update_icon()
 	if(ammo_equipped && ammo_equipped.ammo_count)
@@ -715,17 +720,15 @@
 	firing_delay = 10 //1 seconds
 	point_cost = 600
 
+/obj/structure/dropship_equipment/weapon/minirocket_pod/get_fm_stepping()
+	return 3
+
 /obj/structure/dropship_equipment/weapon/minirocket_pod/update_icon()
 	if(ammo_equipped && ammo_equipped.ammo_count)
 		icon_state = "minirocket_pod_loaded"
 	else
 		if(ship_base) icon_state = "minirocket_pod_installed"
 		else icon_state = "minirocket_pod"
-
-/obj/structure/dropship_equipment/weapon/minirocket_pod/deplete_ammo()
-	..()
-	if(ammo_equipped && !ammo_equipped.ammo_count) //fired last minirocket
-		ammo_equipped = null
 
 /obj/structure/dropship_equipment/weapon/laser_beam_gun
 	name = "laser beam gun"
@@ -737,6 +740,9 @@
 	point_cost = 500
 	skill_required = SKILL_PILOT_TRAINED
 	fire_mission_only = FALSE
+
+/obj/structure/dropship_equipment/weapon/laser_beam_gun/get_fm_stepping()
+	return 4
 
 /obj/structure/dropship_equipment/weapon/laser_beam_gun/update_icon()
 	if(ammo_equipped && ammo_equipped.ammo_count)

@@ -8,8 +8,6 @@
 	anchored = TRUE
 	throwpass = TRUE
 	climbable = TRUE
-	/// Delay between firing steps
-	var/fire_mission_delay = 4
 	/// Time to impact in deciseconds
 	var/travelling_time = 100
 	/// Type of equipment that accept this type of ammo.
@@ -130,6 +128,17 @@
 	ammo_count -= qty * ammo_used_per_firing
 	return TRUE // discard ammo if falsey
 
+/obj/structure/ship_ammo/proc/simulate_ammo_usage(list/firing_steps)
+	var/ammo_usage = ammo_count
+	for(var/step in firing_steps)
+		if(!step || step == "-")
+			continue
+		ammo_usage += ammo_used_per_firing
+	return ammo_usage
+
+/obj/structure/ship_ammo/proc/get_fire_modes()
+	return (CAS_MODE_DIRECT|CAS_MODE_FM)
+
 //30mm gun
 
 /obj/structure/ship_ammo/heavygun
@@ -142,7 +151,6 @@
 	transferable_ammo = TRUE
 	ammo_used_per_firing = 40
 	point_cost = 275
-	fire_mission_delay = 2
 
 /obj/structure/ship_ammo/heavygun/get_examine_text(mob/user)
 	. = ..()
@@ -165,7 +173,6 @@
 	ammo_count = 400
 	max_ammo_count = 400
 	point_cost = 325
-	fire_mission_delay = 2
 /obj/structure/ship_ammo/heavygun/antitank/setup_payload(datum/cas_firing_solution/FS)
 	FS.AddComponent(/datum/component/cas_warhead_heavygun, 40, 4, /datum/ammo/bullet/shrapnel/gau/at)
 
@@ -187,7 +194,6 @@
 	max_inaccuracy = 1
 	warning_sound = 'sound/effects/nightvision.ogg'
 	point_cost = 200
-	fire_mission_delay = 4 //very good but long cooldown
 
 /obj/structure/ship_ammo/heavygun/laser_battery/setup_payload(datum/cas_firing_solution/FS)
 	FS.AddComponent(/datum/component/cas_warhead_laser)
@@ -233,7 +239,6 @@
 	travelling_time = 30 //not powerful, but reaches target fast
 	ammo_id = ""
 	point_cost = 300
-	fire_mission_delay = 4 //We don't care because our ammo has just 1 rocket
 
 /obj/structure/ship_ammo/rocket/widowmaker/setup_payload(datum/cas_firing_solution/FS)
 	FS.AddComponent(/datum/component/cas_warhead_explosive, 300, 40, EXPLOSION_FALLOFF_SHAPE_LINEAR)
@@ -244,7 +249,6 @@
 	icon_state = "banshee"
 	ammo_id = "b"
 	point_cost = 300
-	fire_mission_delay = 4 //We don't care because our ammo has just 1 rocket
 
 /obj/structure/ship_ammo/rocket/banshee/setup_payload(datum/cas_firing_solution/FS)
 	FS.AddComponent(/datum/component/cas_warhead_explosive, 175, 20, EXPLOSION_FALLOFF_SHAPE_LINEAR)
@@ -257,7 +261,6 @@
 	travelling_time = 20 //A fast payload due to its very tight blast zone
 	ammo_id = "k"
 	point_cost = 300
-	fire_mission_delay = 4 //We don't care because our ammo has just 1 rocket
 
 /obj/structure/ship_ammo/rocket/keeper/setup_payload(datum/cas_firing_solution/FS)
 	FS.AddComponent(/datum/component/cas_warhead_explosive, 450, 100, EXPLOSION_FALLOFF_SHAPE_EXPONENTIAL)
@@ -269,7 +272,6 @@
 	ammo_id = "s"
 	travelling_time = 50
 	point_cost = 300
-	fire_mission_delay = 4
 
 //Looks kinda OP but all it can actually do is just to blow windows and some of other things out, cant do much damage.
 /obj/structure/ship_ammo/rocket/harpoon/setup_payload(datum/cas_firing_solution/FS)
@@ -281,8 +283,9 @@
 	icon_state = "napalm"
 	ammo_id = "n"
 	point_cost = 500
-	fire_mission_delay = 0 //0 means unusable
 
+/obj/structure/ship_ammo/rocket/napalm/get_fire_modes()
+	return CAS_MODE_DIRECT
 /obj/structure/ship_ammo/rocket/napalm/setup_payload(datum/cas_firing_solution/FS)
 	FS.AddComponent(/datum/component/cas_warhead_explosive, 200, 25, EXPLOSION_FALLOFF_SHAPE_LINEAR)
 	FS.AddComponent(/datum/component/cas_warhead_incendiary, 6, 60, 30, "#EE6515")
@@ -302,7 +305,6 @@
 	travelling_time = 80 //faster than 30mm cannon, slower than real rockets
 	transferable_ammo = TRUE
 	point_cost = 300
-	fire_mission_delay = 3 //high cooldown
 
 /obj/structure/ship_ammo/minirocket/setup_payload(datum/cas_firing_solution/FS)
 	FS.AddComponent(/datum/component/cas_warhead_explosive, 200, 44, EXPLOSION_FALLOFF_SHAPE_LINEAR)
@@ -328,7 +330,6 @@
 	desc = "A pack of laser guided incendiary mini rockets."
 	icon_state = "minirocket_inc"
 	point_cost = 500
-	fire_mission_delay = 3 //high cooldown
 
 /obj/structure/ship_ammo/minirocket/incendiary/setup_payload(datum/cas_firing_solution/FS)
 	. = ..()
