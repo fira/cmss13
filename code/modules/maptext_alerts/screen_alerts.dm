@@ -21,7 +21,6 @@
 	if(LAZYLEN(client.screen_texts) == 1) //lets only play one at a time, for thematic effect and prevent overlap
 		INVOKE_ASYNC(text_box, TYPE_PROC_REF(/atom/movable/screen/text/screen_text, play_to_client), client)
 		return
-	client.screen_texts += text_box
 
 
 /atom/movable/screen/text/screen_text
@@ -96,6 +95,9 @@
 			continue
 		maptext = "[style_open][copytext_char(text_to_play, 1, letter)][style_close]"
 		sleep(play_delay)
+	if(QDELETED(src))
+		end_play(player)
+		return
 	addtimer(CALLBACK(src, PROC_REF(after_play), player), fade_out_delay)
 
 ///handles post-play effects like fade out after the fade out delay
@@ -106,15 +108,17 @@
 		end_play(player)
 		return
 	animate(src, alpha = 0, time = fade_out_time)
+	if(QDELETED(src))
+		end_play(player)
+		return
 	addtimer(CALLBACK(src, PROC_REF(end_play), player), fade_out_time)
 
 ///ends the play then deletes this screen object and plays the next one in queue if it exists
 /atom/movable/screen/text/screen_text/proc/end_play(client/player)
-	if(!player)
-		return
+	if(!QDELETED(src))
+		qdel(src)
 	player.screen -= src
 	LAZYREMOVE(player.screen_texts, src)
-	qdel(src)
 	if(!LAZYLEN(player.screen_texts))
 		return
 	player.screen_texts[1].play_to_client(player)
