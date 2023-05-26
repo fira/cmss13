@@ -117,6 +117,8 @@
 /atom/movable/screen/text/screen_text/proc/end_play(client/player)
 	if(!QDELETED(src))
 		qdel(src)
+	if(!player)
+		return
 	player.screen -= src
 	LAZYREMOVE(player.screen_texts, src)
 	if(!LAZYLEN(player.screen_texts))
