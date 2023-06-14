@@ -413,3 +413,7 @@ var/list/default_xeno_onmob_icons = list(
 #define HANDLING_LIMBS list("l_arm","l_hand", "r_arm", "r_hand")
 #define EXTREMITY_LIMBS list("l_leg","l_foot","r_leg","r_foot","l_arm","l_hand","r_arm","r_hand")
 #define CORE_LIMBS list("chest","head","groin")
+
+/// For how long after lying down you are still vulnerable to projectiles
+/// This is neccessary so explosions can still deal shrapnel damage despite knocking down
+#define LYING_PROJECTILE_DELAY (0.2 SECONDS)

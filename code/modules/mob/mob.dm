@@ -701,12 +701,14 @@ note dizziness decrements automatically in the mob's Life() proc.
 	if(laid_down)
 		lying = TRUE
 		flags_atom &= ~DIRLOCK
+		lying_start = world.time
 	else
 		lying = FALSE
 	if(buckled)
 		if(buckled.buckle_lying)
 			lying = TRUE
 			flags_atom &= ~DIRLOCK
+			lying_start = world.time
 		else
 			lying = FALSE
 

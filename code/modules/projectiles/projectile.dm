@@ -496,7 +496,7 @@
 						X.behavior_delegate.on_hitby_projectile(ammo)
 
 			. = TRUE
-		else if(!L.lying)
+		else if(!L.lying || (L.lying && (world.time < L.lying_start + LYING_PROJECTILE_DELAY)))
 			animatation_displace_reset(L)
 			if(ammo.sound_miss) playsound_client(L.client, ammo.sound_miss, get_turf(L), 75, TRUE)
 			L.visible_message(SPAN_AVOIDHARM("[src] misses [L]!"),
@@ -744,7 +744,7 @@
 //mobs use get_projectile_hit_chance instead of get_projectile_hit_boolean
 
 /mob/living/proc/get_projectile_hit_chance(obj/item/projectile/P)
-	if(lying && src != P.original)
+	if(lying && src != P.original && (lying_start + LYING_PROJECTILE_DELAY) < world.time)
 		return FALSE
 	var/ammo_flags = P.ammo.flags_ammo_behavior | P.projectile_override_flags
 	if(ammo_flags & AMMO_XENO)

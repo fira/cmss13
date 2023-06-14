@@ -97,6 +97,10 @@
 	var/gibbing = FALSE
 	var/lying = FALSE
 	var/lying_prev = 0
+
+	/// Time we started lying down at, for shrapnel accuracy calculations
+	var/lying_start = 0
+
 	var/canmove = 1
 	var/lastpuke = 0
 	unacidable = FALSE
