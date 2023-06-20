@@ -65,7 +65,7 @@
 	O.throwing = 0 //it hit, so stop moving
 
 	var/mob/M
-	if(ismob(LM.thrower))
+	if(ismob(LM?.thrower))
 		M = LM.thrower
 		if(damage_done > 5)
 			M.track_hit(initial(O.name))
