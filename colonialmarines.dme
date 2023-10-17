@@ -572,6 +572,7 @@ s// DM Environment file for colonialmarines.dme.
 #include "code\datums\stamina\_stamina.dm"
 #include "code\datums\stamina\none.dm"
 #include "code\datums\statistics\cause_data.dm"
+#include "code\datums\statistics\player_legacy.dm"
 #include "code\datums\statistics\entities\caste_stats.dm"
 #include "code\datums\statistics\entities\death_stats.dm"
 #include "code\datums\statistics\entities\human_stats.dm"

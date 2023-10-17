@@ -59,10 +59,10 @@ GLOBAL_DATUM_INIT(medals_panel, /datum/medals_panel_tgui, new)
 			return TRUE
 
 		if("delete_medal")
-			remove_award(params["recipient"], TRUE, params["index"] + 1) // Why is byond not 0 indexed?
+			remove_award(params["recipient"], params["ckey"], TRUE, params["index"] + 1) // Why is byond not 0 indexed?
 			return TRUE
 
 		if("delete_jelly")
-			remove_award(params["recipient"], FALSE, params["index"] + 1) // Why is byond not 0 indexed?
+			remove_award(params["recipient"], params["ckey"], FALSE, params["index"] + 1) // Why is byond not 0 indexed?
 			return TRUE
 

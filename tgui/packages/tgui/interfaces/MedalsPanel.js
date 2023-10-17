@@ -123,6 +123,7 @@ const MedalsPage = (props, context) => {
                     onClick={() =>
                       act(isMarineMedal ? 'delete_medal' : 'delete_jelly', {
                         recipient: recipient_name,
+                        ckey: ckeys[recipient_name],
                         index: medalIndex,
                       })
                     }

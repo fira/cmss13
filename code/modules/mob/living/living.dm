@@ -25,6 +25,11 @@
 	GLOB.living_mob_list -= src
 	pipes_shown = null
 
+	// Commit our before-deletion state to globals for player tracking
+	if(persistent_ckey)
+		var/datum/player_legacy/legacy = new(src)
+		legacy?.register()
+
 	. = ..()
 
 	attack_icon = null

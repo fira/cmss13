@@ -692,6 +692,9 @@
 	GLOB.living_xeno_list -= src
 	GLOB.xeno_mob_list -= src
 
+	var/datum/player_legacy/legacy = new(src)
+	legacy?.register()
+
 	if(tracked_marker)
 		tracked_marker.xenos_tracking -= src
 		tracked_marker = null

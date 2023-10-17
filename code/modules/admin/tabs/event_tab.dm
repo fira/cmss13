@@ -400,9 +400,14 @@
 	var/datum/hive_status/last_hive_checked
 
 	var/datum/hive_status/hive
+	var/list/hives_with_dead = list()
+	for(var/datum/player_legacy/legacy as anything in GLOB.player_legacies)
+		if(legacy.hivenumber)
+			hives_with_dead[legacy.hivenumber] = 1
+
 	for(var/hivenumber in GLOB.hive_datum)
 		hive = GLOB.hive_datum[hivenumber]
-		if(hive.totalXenos.len > 0 || hive.total_dead_xenos.len > 0)
+		if(hive.totalXenos.len > 0 || hives_with_dead[hivenumber])
 			hives += list("[hive.name]" = hive.hivenumber)
 			last_hive_checked = hive
 

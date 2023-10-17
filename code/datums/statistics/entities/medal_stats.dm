@@ -52,19 +52,19 @@
 		"id",
 	)
 
-/datum/entity/player_entity/proc/track_medal_earned(new_medal_type, mob/new_recipient, new_recipient_role, new_citation, mob/giver)
-	if(!new_medal_type || !new_recipient || new_recipient.statistic_exempt || !new_recipient_role || !new_citation || !giver)
+/datum/entity/player_entity/proc/track_medal_earned(new_medal_type, datum/player_legacy/legacy, new_citation, mob/giver)
+	if(!new_medal_type || !legacy || !legacy.medal_eligible || !legacy.rank || !new_citation || !giver)
 		return
 
 	var/datum/entity/statistic/medal/new_medal = DB_ENTITY(/datum/entity/statistic/medal)
-	var/datum/entity/player/player_entity = get_player_from_key(new_recipient.ckey)
+	var/datum/entity/player/player_entity = get_player_from_key(legacy.ckey)
 	if(player_entity)
 		new_medal.player_id = player_entity.id
 
 	new_medal.round_id = SSperf_logging.round.id
 	new_medal.medal_type = new_medal_type
-	new_medal.recipient_name = new_recipient.real_name
-	new_medal.recipient_role = new_recipient_role
+	new_medal.recipient_name = legacy.name
+	new_medal.recipient_role = legacy.rank
 	new_medal.citation = new_citation
 
 	new_medal.giver_name = giver.real_name
@@ -76,14 +76,19 @@
 	new_medal.save()
 	new_medal.detach()
 
-	if (isxeno(new_recipient))
-		var/datum/entity/player_stats/xeno/xeno_stats = setup_xeno_stats()
-		xeno_stats.count_niche_stat(STATISTICS_NICHE_MEDALS, 1, new_recipient_role)
-		xeno_stats.medal_list.Insert(1, new_medal)
+	if(ispath(legacy.mob_type, /mob/living/carbon/xenomorph))
+		var/datum/entity/player_stats/xeno/player_stats
+		player_stats = setup_xeno_stats()
+		player_stats.count_niche_stat(STATISTICS_NICHE_MEDALS, 1, legacy.rank)
+		player_stats.medal_list.Insert(1, new_medal)
 	else
-		var/datum/entity/player_stats/human/human_stats = setup_human_stats()
-		human_stats.count_niche_stat(STATISTICS_NICHE_MEDALS, 1, new_recipient_role)
-		human_stats.medal_list.Insert(1, new_medal)
+		var/datum/entity/player_stats/human/player_stats
+		player_stats = setup_human_stats()
+		player_stats.count_niche_stat(STATISTICS_NICHE_MEDALS, 1, legacy.rank)
+		player_stats.medal_list.Insert(1, new_medal)
+
+
+
 
 /datum/entity/player_entity/proc/untrack_medal_earned(medal_type, mob/recipient, citation)
 	if(!medal_type || !recipient || recipient.statistic_exempt || !citation)

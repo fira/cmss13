@@ -19,10 +19,8 @@ GLOBAL_LIST_EMPTY(jelly_awards)
 	var/list/posthumous
 	var/recipient_rank
 	var/recipient_ckey
-	var/mob/recipient_mob
 	var/list/giver_name // Designation for xenos
 	var/list/giver_rank // "Name" for xenos
-	var/list/giver_mob
 	var/list/giver_ckey
 
 /datum/recipient_awards/New()
@@ -32,22 +30,31 @@ GLOBAL_LIST_EMPTY(jelly_awards)
 	posthumous = list()
 	giver_name = list()
 	giver_rank = list()
-	giver_mob = list()
 	giver_ckey = list()
 
-
-/proc/give_medal_award(medal_location, as_admin = FALSE)
+/proc/give_medal_award(turf/medal_location, as_admin = FALSE, faction = FACTION_USCM)
 	if(as_admin && !check_rights(R_ADMIN))
 		as_admin = FALSE
 
+	var/list/datum/player_legacy/living_legacies = list()
+	var/list/datum/player_legacy/mob_cache = list() // temporary mob reference cache, used solely below to target the recipient directly
+	// snapshot all mobs to legacies for common handling
+	for(var/mob/living/existing as anything in GLOB.living_mob_list)
+		var/datum/player_legacy/legacy = new /datum/player_legacy(existing)
+		living_legacies += legacy
+		mob_cache[legacy] = existing
+
+	// now join both up and filter relevant members into a list we can send to tgui_input_list
+	var/list/selections = list()
+	for(var/datum/player_legacy/legacy as anything in living_legacies + GLOB.player_legacies)
+		if(legacy.faction != faction)
+			continue
+		if(!legacy.medal_eligible)
+			continue
+		selections[legacy.name] = legacy
+
 	// Pick a marine
-	var/list/possible_recipients = list()
-	var/list/recipient_ranks = list()
-	for(var/datum/data/record/record in GLOB.data_core.general)
-		var/recipient_name = record.fields["name"]
-		recipient_ranks[recipient_name] = record.fields["rank"]
-		possible_recipients += recipient_name
-	var/chosen_recipient = tgui_input_list(usr, "Who do you want to award a medal to?", "Medal Recipient", possible_recipients)
+	var/datum/player_legacy/chosen_recipient = tgui_input_list(usr, "Who do you want to award a medal to?", "Medal Recipient", selections)
 	if(!chosen_recipient)
 		return FALSE
 
@@ -62,48 +69,19 @@ GLOBAL_LIST_EMPTY(jelly_awards)
 		return FALSE
 
 	// Get mob information
-	var/recipient_rank = recipient_ranks[chosen_recipient]
-	var/posthumous = TRUE
-	var/recipient_ckey
-	var/mob/recipient_mob
-	var/mob/giver_mob
-	var/found_other = as_admin // Don't need to check for giver mob in admin mode
-	for(var/mob/mob in GLOB.mob_list)
-		if(!as_admin && mob == usr)
-			// Giver: Increment their medals given stat
-			giver_mob = mob
-			mob.count_niche_stat(STATISTICS_NICHE_MEDALS_GIVE)
-			if(found_other)
-				break
-			found_other = TRUE
-		if(mob.real_name == chosen_recipient)
-			// Recipient: Check if they are dead, and get some info
-			// We might not get this info if gibbed, so we'd need to refactor again and find another way if we want stats always correct
-			if(isliving(mob) && mob.stat != DEAD)
-				posthumous = FALSE
-			recipient_ckey = mob.persistent_ckey
-			recipient_mob = mob
-			if(found_other)
-				break
-			found_other = TRUE
-	if(!recipient_mob)
-		for(var/mob/mob in GLOB.dead_mob_list)
-			if(mob.real_name == chosen_recipient)
-				// Recipient: Check if they are dead?, and get some info
-				// We might not get this info if gibbed, so we'd need to refactor again and find another way if we want stats always correct
-				if(isliving(mob) && mob.stat != DEAD)
-					posthumous = FALSE
-				recipient_ckey = mob.persistent_ckey
-				recipient_mob = mob
-				break
+	var/posthumous = chosen_recipient.dead
+	if(!as_admin && usr)
+		usr.count_niche_stat(STATISTICS_NICHE_MEDALS_GIVE)
 
 	// Admin: Offer a medal_location if missing
 	if(as_admin && !medal_location)
 		var/medal_override = tgui_input_list(usr, "Spawn a medal? Press cancel for no item.", "Medal Location", list("On Recipient", "On Me"))
 		if(medal_override == "On Recipient")
-			medal_location = get_turf(recipient_mob)
-			playsound(recipient_mob, 'sound/items/trayhit1.ogg', 15, FALSE)
-			recipient_mob.visible_message(SPAN_DANGER("[recipient_mob] has been hit in the head by the [medal_type]."), null, null, 5)
+			var/mob/living/tentative_recipient = mob_cache[chosen_recipient]
+			if(tentative_recipient)
+				medal_location = get_turf(tentative_recipient)
+				playsound(tentative_recipient, 'sound/items/trayhit1.ogg', 15, FALSE)
+				tentative_recipient.visible_message(SPAN_DANGER("[tentative_recipient] has been hit in the head by the [medal_type]."), null, null, 5)
 		else if(medal_override == "On Me")
 			medal_location = get_turf(usr)
 
@@ -111,18 +89,21 @@ GLOBAL_LIST_EMPTY(jelly_awards)
 	if(!GLOB.medal_awards[chosen_recipient])
 		GLOB.medal_awards[chosen_recipient] = new /datum/recipient_awards()
 	var/datum/recipient_awards/recipient_award = GLOB.medal_awards[chosen_recipient]
-	recipient_award.recipient_rank = recipient_rank
-	recipient_award.recipient_ckey = recipient_ckey
-	recipient_award.recipient_mob = recipient_mob
-	recipient_award.giver_mob += giver_mob
+	recipient_award.recipient_rank = chosen_recipient.rank
+	recipient_award.recipient_ckey = chosen_recipient.ckey
 	recipient_award.medal_names += medal_type
 	recipient_award.medal_citations += citation
 	recipient_award.posthumous += posthumous
 	recipient_award.giver_ckey += usr.ckey
 
-	if(!as_admin)
-		recipient_award.giver_rank += recipient_ranks[usr.real_name] // Currently not used in marine award message
-		recipient_award.giver_name += usr.real_name // Currently not used in marine award message
+	if(!as_admin && isliving(usr))
+		var/mob/living/user = usr
+		if(isxeno(user))
+			var/mob/living/carbon/xenomorph/xeno_user = user
+			recipient_award.giver_rank += xeno_user.caste_type // Currently not used in marine award message
+		else
+			recipient_award.giver_rank += user.job // Currently not used in marine award message
+		recipient_award.giver_name += user.real_name // Currently not used in marine award message
 	else
 		recipient_award.giver_rank += null
 		recipient_award.giver_name += null
@@ -143,19 +124,19 @@ GLOBAL_LIST_EMPTY(jelly_awards)
 				return FALSE
 		medal.recipient_name = chosen_recipient
 		medal.medal_citation = citation
-		medal.recipient_rank = recipient_rank
+		medal.recipient_rank = chosen_recipient.rank
 		recipient_award.medal_items += medal
 	else
 		recipient_award.medal_items += null
 
 	// Recipient: Add the medal to the player's stats
-	if(recipient_ckey)
-		var/datum/entity/player_entity/recipient_player = setup_player_entity(recipient_ckey)
+	if(chosen_recipient.ckey)
+		var/datum/entity/player_entity/recipient_player = setup_player_entity(chosen_recipient.ckey)
 		if(recipient_player)
-			recipient_player.track_medal_earned(medal_type, recipient_mob, recipient_rank, citation, usr)
+			recipient_player.track_medal_earned(medal_type, chosen_recipient, citation, usr)
 
 	// Inform staff of success
-	message_admins("[key_name_admin(usr)] awarded a <a href='?medals_panel=1'>[medal_type]</a> to [chosen_recipient] for: \'[citation]\'.")
+	message_admins("[key_name_admin(usr)] awarded a <a href='?medals_panel=1'>[medal_type]</a> to [chosen_recipient.name] for: \'[citation]\'.")
 
 	return TRUE
 
@@ -189,33 +170,26 @@ GLOBAL_LIST_EMPTY(jelly_awards)
 	if(as_admin && !check_rights(R_ADMIN))
 		as_admin = FALSE
 
-	// Pick a xeno
-	var/list/possible_recipients = list()
-	var/list/recipient_castes = list()
-	var/list/recipient_mobs = list()
-	for(var/mob/living/carbon/xenomorph/xeno in hive.totalXenos)
-		if (xeno.persistent_ckey == usr.persistent_ckey) // Don't award self
+	var/list/datum/player_legacy/living_legacies = list()
+	var/list/datum/player_legacy/mob_cache = list() // temporary mob reference cache, used solely below to target the recipient directly
+	// snapshot all mobs to legacies for common handling
+	for(var/mob/living/existing as anything in GLOB.living_mob_list)
+		var/datum/player_legacy/legacy = new /datum/player_legacy(existing)
+		living_legacies += legacy
+		mob_cache[legacy] = existing
+
+	// now join both up and filter relevant members into a list we can send to tgui_input_list
+	var/list/selections = list()
+	for(var/datum/player_legacy/legacy as anything in living_legacies + GLOB.player_legacies)
+		if(legacy.hivenumber != hive)
 			continue
-		if (xeno.tier == 0) // Don't award larva or facehuggers
+		if(!legacy.medal_eligible)
 			continue
-		if (!as_admin && istype(xeno.caste, /datum/caste_datum/queen)) // Don't award queens unless admin
+		if(!as_admin && legacy.rank == XENO_CASTE_QUEEN)
 			continue
-		var/recipient_name = xeno.real_name
-		recipient_castes[recipient_name] = xeno.caste_type
-		recipient_mobs[recipient_name] = xeno
-		possible_recipients += recipient_name
-	for(var/mob/living/carbon/xenomorph/xeno in hive.total_dead_xenos)
-		if (xeno.persistent_ckey == usr.persistent_ckey) // Don't award previous selves
-			continue
-		if (xeno.tier == 0) // Don't award larva or facehuggers
-			continue
-		if (!as_admin && istype(xeno.caste, /datum/caste_datum/queen)) // Don't award previous queens unless admin
-			continue
-		var/recipient_name = xeno.real_name
-		recipient_castes[recipient_name] = xeno.caste_type
-		recipient_mobs[recipient_name] = xeno
-		possible_recipients += recipient_name
-	var/chosen_recipient = tgui_input_list(usr, "Who do you want to award jelly to?", "Jelly Recipient", possible_recipients, theme="hive_status")
+		selections[legacy.name] = legacy
+
+	var/datum/player_legacy/chosen_recipient = tgui_input_list(usr, "Who do you want to award jelly to?", "Jelly Recipient", selections, theme="hive_status")
 	if(!chosen_recipient)
 		return FALSE
 
@@ -237,39 +211,23 @@ GLOBAL_LIST_EMPTY(jelly_awards)
 			admin_attribution = "none"
 
 	// Get mob information
-	var/recipient_caste = recipient_castes[chosen_recipient]
-	var/mob/recipient_mob = recipient_mobs[chosen_recipient]
-	var/mob/giver_mob
-	var/recipient_ckey = recipient_mob.persistent_ckey
-	var/posthumous = !isliving(recipient_mob) || recipient_mob.stat == DEAD
-	if(!as_admin) // Don't need to check for giver mob in admin mode
-		for(var/mob/mob in hive.totalXenos)
-			if(mob == usr)
-				// Giver: Increment their medals given stat
-				giver_mob = mob
-				mob.count_niche_stat(STATISTICS_NICHE_MEDALS_GIVE)
-				break
+	if(!as_admin && usr)
+		usr.count_niche_stat(STATISTICS_NICHE_MEDALS_GIVE)
 
 	// Create the recipient_award
 	if(!GLOB.jelly_awards[chosen_recipient])
 		GLOB.jelly_awards[chosen_recipient] = new /datum/recipient_awards()
 	var/datum/recipient_awards/recipient_award = GLOB.jelly_awards[chosen_recipient]
-	recipient_award.recipient_rank = recipient_caste // Currently not used in xeno award message
-	recipient_award.recipient_ckey = recipient_ckey
-	recipient_award.recipient_mob = recipient_mob
-	recipient_award.giver_mob += giver_mob
+	recipient_award.recipient_rank = chosen_recipient.rank
+	recipient_award.recipient_ckey = chosen_recipient.ckey
 	recipient_award.medal_names += medal_type
 	recipient_award.medal_citations += citation
-	recipient_award.posthumous += posthumous
+	recipient_award.posthumous += chosen_recipient.dead
 	recipient_award.giver_ckey += usr.ckey
 
 	if(!admin_attribution)
-		recipient_award.giver_rank += usr.name
-		var/mob/living/carbon/xenomorph/giving_xeno = usr
-		if(istype(giving_xeno))
-			recipient_award.giver_name += giving_xeno.full_designation
-		else
-			recipient_award.giver_name += null
+		recipient_award.giver_rank += chosen_recipient.rank
+		recipient_award.giver_name += chosen_recipient.name
 	else if(admin_attribution == "none")
 		recipient_award.giver_rank += null
 		recipient_award.giver_name += null
@@ -280,17 +238,17 @@ GLOBAL_LIST_EMPTY(jelly_awards)
 	recipient_award.medal_items += null // TODO: Xeno award item?
 
 	// Recipient: Add the medal to the player's stats
-	if(recipient_ckey)
-		var/datum/entity/player_entity/recipient_player = setup_player_entity(recipient_ckey)
+	if(chosen_recipient.ckey)
+		var/datum/entity/player_entity/recipient_player = setup_player_entity(chosen_recipient.ckey)
 		if(recipient_player)
-			recipient_player.track_medal_earned(medal_type, recipient_mob, recipient_caste, citation, usr)
+			recipient_player.track_medal_earned(medal_type, chosen_recipient, citation, usr)
 
 	// Inform staff of success
 	message_admins("[key_name_admin(usr)] awarded a <a href='?medals_panel=1'>[medal_type]</a> to [chosen_recipient] for: \'[citation]\'.")
 
 	return TRUE
 
-/proc/remove_award(recipient_name, is_marine_medal, index = 1)
+/proc/remove_award(recipient_name, ckey, is_marine_medal, index = 1)
 	if(!check_rights(R_MOD))
 		return FALSE
 
@@ -310,10 +268,6 @@ GLOBAL_LIST_EMPTY(jelly_awards)
 	if(index < 1 || index > recipient_award.medal_names.len)
 		to_chat(usr, "Error: Index [index] is out of bounds!")
 		return FALSE
-
-	// Get mob references since we're only working with name
-	var/mob/recipient_mob = recipient_award.recipient_mob
-	var/mob/giver_mob = recipient_award.giver_mob[index]
 
 	// Delete the physical award item
 	var/obj/item/medal_item = recipient_award.medal_items[index]
@@ -345,21 +299,16 @@ GLOBAL_LIST_EMPTY(jelly_awards)
 		recipient_award.posthumous.Cut(index, index + 1)
 		recipient_award.giver_name.Cut(index, index + 1)
 		recipient_award.giver_rank.Cut(index, index + 1)
-		recipient_award.giver_mob.Cut(index, index + 1)
 		recipient_award.giver_ckey.Cut(index, index + 1)
 		recipient_award.medal_items.Cut(index, index + 1)
 
-	// Remove giver's stat
-	if(giver_mob)
-		giver_mob.count_niche_stat(STATISTICS_NICHE_MEDALS_GIVE, -1)
-
-	// Remove stats for recipient (this has a weakref to the mob, but theres a possibility of recipient.statistic_exempt)
-	if(recipient_mob)
-		var/datum/entity/player_entity/recipient_player = setup_player_entity(recipient_mob.persistent_ckey)
+	// Remove stats for recipient
+	if(ckey)
+		var/datum/entity/player_entity/recipient_player = setup_player_entity(ckey)
 		if(recipient_player)
-			recipient_player.untrack_medal_earned(medal_type, recipient_mob, citation)
+			recipient_player.untrack_medal_earned(medal_type, ckey, citation)
 
 	// Inform staff of success
-	message_admins("[key_name_admin(usr)] deleted [recipient_name]'s <a href='?medals_panel=1'>[medal_type]</a> for: \'[citation]\'.")
+	message_admins("[key_name_admin(usr)] deleted [ckey]'s <a href='?medals_panel=1'>[medal_type]</a> for: \'[citation]\'.")
 
 	return TRUE

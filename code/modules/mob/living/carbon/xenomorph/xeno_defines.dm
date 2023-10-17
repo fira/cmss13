@@ -272,8 +272,6 @@
 	var/list/tier_3_xenos = list()
 	/// list of living xenos
 	var/list/totalXenos = list()
-	/// list of previously living xenos (hardrefs currently)
-	var/list/total_dead_xenos = list()
 	var/xeno_queen_timer
 	var/isSlotOpen = TRUE //Set true for starting alerts only after the hive has reached its full potential
 	var/allowed_nest_distance = 15 //How far away do we allow nests from an ovied Queen. Default 15 tiles.
@@ -468,10 +466,6 @@
 	if(hard)
 		xeno.hivenumber = 0
 		xeno.hive = null
-#ifndef UNIT_TESTS // Since this is a hard ref, we shouldn't confuse create_and_destroy
-	else
-		total_dead_xenos += xeno
-#endif
 
 	totalXenos -= xeno
 	if(xeno.tier == 2)
