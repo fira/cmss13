@@ -170,7 +170,7 @@
 		message_title = "MentorHelp"
 		// If there's a mentor, let them mark it. If not, let them unmark it
 		if(mentor)
-			message_sender_options = " (<a href='?src=\ref[src];action=unmark'>Unmark</a>"
+			message_sender_options = " (<a href='?src=\ref[src];action=mark'>Unmark</a>"
 		else
 			message_sender_options = " (<a href='?src=\ref[src];action=mark'>Mark</a>"
 		message_sender_options += " | <a href='?src=\ref[src];action=close'>Close</a> | <a href='?src=\ref[src];action=autorespond'>AutoResponse</a>)"
@@ -193,6 +193,9 @@
 		return
 
 	// Already marked
+	if(mentor == thread_mentor) // Toggle it back off
+		unmark(thread_mentor)
+		return
 	if(mentor)
 		to_chat(thread_mentor, SPAN_MENTORHELP("<b>NOTICE:</b> A mentor is already handling this thread!"))
 		return
