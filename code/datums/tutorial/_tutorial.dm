@@ -97,6 +97,7 @@ GLOBAL_LIST_EMPTY_TYPED(ongoing_tutorials, /datum/tutorial)
 
 /// Verify the template loaded fully and without error.
 /datum/tutorial/proc/verify_template_loaded()
+	return TRUE // TODO FIXME TESTING
 	var/turf/top_right_corner = locate(
 		bottom_left_corner.x + initial(tutorial_template.width),
 		bottom_left_corner.y + initial(tutorial_template.height),

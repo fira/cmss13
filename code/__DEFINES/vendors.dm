@@ -67,3 +67,5 @@
 //Whether or not to load ammo boxes depending on ammo loaded into the vendor
 //Only relevant in big vendors, like Requisitions or Squad Prep
 #define VEND_LOAD_AMMO_BOXES (1<<9)
+/// Vends props looking like the items instead of the actual items. Basically for tutorials.
+#define VEND_PROPS (1<<10)
