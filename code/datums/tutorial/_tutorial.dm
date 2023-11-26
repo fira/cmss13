@@ -1,4 +1,4 @@
-GLOBAL_LIST_EMPTY(ongoing_tutorials)
+GLOBAL_LIST_EMPTY_TYPED(ongoing_tutorials, /datum/tutorial)
 
 /// A tutorial datum contains a set of instructions for a player tutorial, such as what to spawn, what's scripted to occur, and so on.
 /datum/tutorial
@@ -59,11 +59,15 @@ GLOBAL_LIST_EMPTY(ongoing_tutorials)
 	var/turf/bottom_left_corner_reservation = locate(reservation.bottom_left_coords[1], reservation.bottom_left_coords[2], reservation.bottom_left_coords[3])
 	var/datum/map_template/tutorial/template = new tutorial_template
 	template.load(bottom_left_corner_reservation, FALSE, TRUE)
-
-	GLOB.ongoing_tutorials |= src
 	var/obj/landmark = locate(/obj/effect/landmark/tutorial_bottom_left) in GLOB.landmarks_list
 	bottom_left_corner = get_turf(landmark)
 	qdel(landmark)
+
+	if(!verify_template_loaded())
+		abort_tutorial()
+		return FALSE
+
+	GLOB.ongoing_tutorials |= src
 	var/area/tutorial_area = get_area(bottom_left_corner)
 	tutorial_area.update_base_lighting() // this will be entirely dark otherwise
 	init_map()
@@ -75,12 +79,10 @@ GLOBAL_LIST_EMPTY(ongoing_tutorials)
 /// The proc used to end and clean up the tutorial
 /datum/tutorial/proc/end_tutorial(completed = FALSE)
 	SHOULD_CALL_PARENT(TRUE)
+	SIGNAL_HANDLER
 
 	if(tutorial_mob)
-		remove_action(tutorial_mob, /datum/action/tutorial_end)
-		var/datum/component/status = tutorial_mob.GetComponent(/datum/component/tutorial_status)
-		qdel(status)
-		REMOVE_TRAIT(tutorial_mob, TRAIT_IN_TUTORIAL, TRAIT_SOURCE_TUTORIAL)
+		remove_action(tutorial_mob, /datum/action/tutorial_end) // Just in case to make sure the client can't try and leave the tutorial while it's mid-cleanup
 		if(tutorial_mob.client?.prefs && completed)
 			tutorial_mob.client.prefs.completed_tutorials |= tutorial_id
 			tutorial_mob.client.prefs.save_character()
@@ -92,6 +94,26 @@ GLOBAL_LIST_EMPTY(ongoing_tutorials)
 
 	if(!QDELETED(src))
 		qdel(src)
+
+/// Verify the template loaded fully and without error.
+/datum/tutorial/proc/verify_template_loaded()
+	var/turf/top_right_corner = locate(
+		bottom_left_corner.x + initial(tutorial_template.width),
+		bottom_left_corner.y + initial(tutorial_template.height),
+		bottom_left_corner.z
+	)
+	for(var/turf/tile as anything in block(bottom_left_corner, top_right_corner))
+		// For some reason I'm unsure of, the template will not always fully load, leaving some tiles to be space tiles. So, we check all tiles in the (small) tutorial area
+		// and tell start_tutorial to abort if there's any space tiles.
+		if(istype(tile, /turf/open/space))
+			return FALSE
+
+	return TRUE
+
+/// Something went very, very wrong during load so let's abort
+/datum/tutorial/proc/abort_tutorial()
+	to_chat(tutorial_mob, SPAN_BOLDWARNING("Something went wrong during tutorial load, please try again!"))
+	end_tutorial(FALSE)
 
 /datum/tutorial/proc/add_highlight(atom/target, color = "#d19a02")
 	target.add_filter("tutorial_highlight", 2, list("type" = "outline", "color" = color, "size" = 1))
