@@ -70,6 +70,7 @@
 
 	steps_walking++
 
+/*
 	switch(steps_walking)
 		if(max_steps * 0.3 to max_steps * 0.6)
 			if(last_message_time + MESSAGE_COOLDOWN < world.time)
@@ -88,6 +89,7 @@
 			parent_human.apply_effect(stun_time, STUN)
 			addtimer(CALLBACK(src, PROC_REF(rest_legs_pain), parent_human, FALSE), stun_time)
 			return
+*/
 
 	INVOKE_ASYNC(src, PROC_REF(rest_legs), parent_human, FALSE)
 
