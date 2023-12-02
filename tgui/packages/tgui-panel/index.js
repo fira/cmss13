@@ -58,9 +58,11 @@ const renderApp = createRenderer(() => {
 const setupApp = () => {
   // Delay setup
   if (document.readyState === 'loading') {
+    Byond.command("Bounce DeferingLoading");
     document.addEventListener('DOMContentLoaded', setupApp);
     return;
   }
+  Byond.command("Bounce StartingSetup");
 
   setupGlobalEvents({
     ignoreWindowFocus: true,
@@ -75,6 +77,7 @@ const setupApp = () => {
   Byond.subscribe((type, payload) => store.dispatch({ type, payload }));
 
   // Unhide the panel
+  Byond.command("Bounce UnhidePanel");
   Byond.winset('output', {
     'is-visible': false,
   });
@@ -85,12 +88,22 @@ const setupApp = () => {
     'size': '0x0',
   });
 
+  Byond.winget('browseroutput', 'is-visible')
+    .then((val) => [
+      Byond.command("Bounce Check1Visible" + val),
+    ]);
+
   // Resize the panel to match the non-browser output
   Byond.winget('output').then((output) => {
     Byond.winset('browseroutput', {
       'size': output.size,
     });
   });
+
+  Byond.winget('browseroutput', 'is-visible')
+    .then((val) => [
+      Byond.command("Bounce Check2Visible" + val),
+    ]);
 
   // Enable hot module reloading
   if (module.hot) {

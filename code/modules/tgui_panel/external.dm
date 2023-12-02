@@ -23,6 +23,27 @@
 		winset(src, "browseroutput", "is-disabled=1;is-visible=0")
 		log_tgui(src, "Failed to fix.", context = "verb/fix_tgui_panel")
 
+/client/verb/bounce_tgui_message(message as text)
+	set name = "Bounce"
+	log_debug("at [world.time] : [message]")
+	log_debug("[world.time] | browseroutput is-visible: [winget(src, "browseroutput", "is-visible")]")
+	log_debug("[world.time] | browseroutput is-disabled: [winget(src, "browseroutput", "is-disabled")]")
+	log_debug("[world.time] | output is-visible: [winget(src, "output", "is-visible")]")
+	log_debug("[world.time] | output is-disabled: [winget(src, "output", "is-disabled")]")
+	log_debug("[world.time] | output size: [winget(src, "output", "size")]")
+
+/client/verb/switch_to_browseroutput()
+	set name = "Switch Browseroutput"
+	winset(src, "output", "is-disabled=1&is-visible=0")
+	winset(src, "browseroutput", "is-disabled=0;is-visible=1")
+	bounce_tgui_message("After siwtching to browseroutput")
+
+/client/verb/switch_to_output()
+	set name = "Switch Output"
+	winset(src, "output", "on-show=&is-disabled=0&is-visible=1")
+	winset(src, "browseroutput", "is-disabled=1;is-visible=0")
+	bounce_tgui_message("After siwtching to output")
+
 /client/proc/nuke_chat()
 	// Catch all solution (kick the whole thing in the pants)
 	winset(src, "output", "on-show=&is-disabled=0&is-visible=1")

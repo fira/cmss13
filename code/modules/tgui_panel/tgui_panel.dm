@@ -62,6 +62,12 @@
 /datum/tgui_panel/proc/on_initialize_timed_out()
 	// Currently does nothing but sending a message to old chat.
 	SEND_TEXT(client, "<span class=\"userdanger\">Failed to load fancy chat, click <a href='?src=[REF(src)];reload_tguipanel=1'>HERE</a> to attempt to reload it.</span>")
+	log_debug("Loading failed callback")
+	log_debug("[world.time] | browseroutput is-visible: [winget(client, "browseroutput", "is-visible")]")
+	log_debug("[world.time] | browseroutput is-disabled: [winget(client, "browseroutput", "is-disabled")]")
+	log_debug("[world.time] | output is-visible: [winget(client, "output", "is-visible")]")
+	log_debug("[world.time] | output is-disabled: [winget(client, "output", "is-disabled")]")
+	log_debug("[world.time] | output size: [winget(client, "output", "size")]")
 
 /**
  * private
