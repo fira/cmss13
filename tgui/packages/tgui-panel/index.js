@@ -55,14 +55,18 @@ const renderApp = createRenderer(() => {
   );
 });
 
+const hideOldChat = () => {
+  Byond.winset('output', {
+    'is-visible': false,
+  });
+};
+
 const setupApp = () => {
   // Delay setup
   if (document.readyState === 'loading') {
-    Byond.command("Bounce DeferingLoading");
     document.addEventListener('DOMContentLoaded', setupApp);
     return;
   }
-  Byond.command("Bounce StartingSetup");
 
   setupGlobalEvents({
     ignoreWindowFocus: true,
@@ -82,9 +86,6 @@ const setupApp = () => {
     'is-disabled': false,
     'pos': '0x0',
     'size': '0x0',
-  });
-  Byond.winset('output', {
-    'is-visible': false,
   });
 
   // Resize the panel to match the non-browser output
@@ -110,6 +111,14 @@ const setupApp = () => {
     ], () => {
       renderApp();
     });
+  }
+
+  // For some reason BYOND will sometimes set is-visible=false on oldchat
+  // but actually keep it displayed. We defer to full page load as bandaid
+  if (document.readyState === 'complete') {
+    hideOldChat();
+  } else {
+    document.addEventListener('load', hideOldChat);
   }
 };
 
