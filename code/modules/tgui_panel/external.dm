@@ -32,11 +32,26 @@
 	log_debug("[world.time] | output is-disabled: [winget(src, "output", "is-disabled")]")
 	log_debug("[world.time] | output size: [winget(src, "output", "size")]")
 
-/client/verb/switch_to_browseroutput()
-	set name = "Switch Browseroutput"
-	winset(src, "output", "is-disabled=1&is-visible=0")
-	winset(src, "browseroutput", "is-disabled=0;is-visible=1")
-	bounce_tgui_message("After siwtching to browseroutput")
+/client/verb/zzA1(text as text)
+	set name = "zzSet Disabled Output"
+	winset(src, "output", "is-disabled=[text]")
+	bounce_tgui_message("setting output.is-disabled=[text]")
+/client/verb/zzA2(text as text)
+	set name = "zzSet Visible Output"
+	winset(src, "output", "is-visible=[text]")
+	bounce_tgui_message("setting output.is-visible=[text]")
+/client/verb/zzB1(text as text)
+	set name = "zzSet Disabled Browseroutput"
+	winset(src, "browseroutput", "is-disabled=[text]")
+	bounce_tgui_message("setting browseroutput.is-disabled=[text]")
+/client/verb/zzB2(text as text)
+	set name = "zzSet Visible Browseroutput"
+	winset(src, "browseroutput", "is-visible=[text]")
+	bounce_tgui_message("setting browseroutput.is-visible=[text]")
+/client/verb/zzB3(text as text)
+	set name = "zzSet Size Browseroutput"
+	winset(src, "browseroutput", "size=[text]")
+	bounce_tgui_message("setting browseroutput.size=[text]")
 
 /client/verb/switch_to_output()
 	set name = "Switch Output"
