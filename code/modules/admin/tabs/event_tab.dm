@@ -217,18 +217,15 @@
 
 	if(!istype(chosen_ert))
 		return
+	var/quiet_launch = TRUE
+	var/ql_prompt = tgui_alert(usr, "Would you like to broadcast the beacon launch? This will reveal the distress beacon to all players.", "Announce distress beacon?", list("Yes", "No"), 20 SECONDS)
+	if(ql_prompt == "Yes")
+		quiet_launch = FALSE
 
-	var/launch_broadcast = tgui_alert(usr, "Would you like to broadcast the beacon launch? This will reveal the distress beacon to all players.", "Announce distress beacon?", list("Yes", "No"), 20 SECONDS)
-	if(launch_broadcast == "Yes")
-		launch_broadcast = TRUE
-	else
-		launch_broadcast = FALSE
-
-	var/announce_receipt = tgui_alert(usr, "Would you like to announce the beacon received message? This will reveal the distress beacon to all players.", "Announce beacon received?", list("Yes", "No"), 20 SECONDS)
-	if(announce_receipt == "Yes")
+	var/announce_receipt = FALSE
+	var/ar_prompt = tgui_alert(usr, "Would you like to announce the beacon received message? This will reveal the distress beacon to all players.", "Announce beacon received?", list("Yes", "No"), 20 SECONDS)
+	if(ar_prompt == "Yes")
 		announce_receipt = TRUE
-	else
-		announce_receipt = FALSE
 
 	var/turf/override_spawn_loc
 	var/prompt = tgui_alert(usr, "Spawn at their assigned spawn, or at your location?", "Spawnpoint Selection", list("Spawn", "Current Location"), 0)
@@ -238,7 +235,7 @@
 	if(prompt == "Current Location")
 		override_spawn_loc = get_turf(usr)
 
-	chosen_ert.activate(quiet_launch = launch_broadcast, announce_incoming = announce_receipt, override_spawn_loc = override_spawn_loc)
+	chosen_ert.activate(quiet_launch, announce_receipt, override_spawn_loc)
 
 	message_admins("[key_name_admin(usr)] admin-called a [choice == "Randomize" ? "randomized ":""]distress beacon: [chosen_ert.name]")
 
@@ -424,18 +421,19 @@
 /client/proc/give_nuke()
 	if(!check_rights(R_ADMIN))
 		return
-	var/nuketype = "Decrypted Operational Nuke"
+	var/nukename = "Decrypted Operational Nuke"
 	var/encrypt = tgui_alert(src, "Do you want the nuke to be already decrypted?", "Nuke Type", list("Encrypted", "Decrypted"), 20 SECONDS)
 	if(encrypt == "Encrypted")
-		nuketype = "Encrypted Operational Nuke"
+		nukename = "Encrypted Operational Nuke"
 	var/prompt = tgui_alert(src, "THIS CAN BE USED TO END THE ROUND. Are you sure you want to spawn a nuke? The nuke will be put onto the ASRS Lift.", "DEFCON 1", list("No", "Yes"), 30 SECONDS)
 	if(prompt != "Yes")
 		return
 
+	var/nuketype = GLOB.supply_packs_types[nukename]
+
 	var/datum/supply_order/new_order = new()
-	new_order.ordernum = GLOB.supply_controller.ordernum
-	GLOB.supply_controller.ordernum++
-	new_order.object = GLOB.supply_controller.supply_packs[nuketype]
+	new_order.ordernum = GLOB.supply_controller.ordernum++
+	new_order.object = GLOB.supply_packs_datums[nuketype]
 	new_order.orderedby = MAIN_AI_SYSTEM
 	new_order.approvedby = MAIN_AI_SYSTEM
 	GLOB.supply_controller.shoppinglist += new_order
