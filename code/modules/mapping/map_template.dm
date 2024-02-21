@@ -86,7 +86,7 @@
 		var/area/loc_area = unlit.loc
 		if(!loc_area.static_lighting)
 			continue
-		unlit.lighting_build_overlay()
+		unlit.static_lighting_build_overlay()
 
 /datum/map_template/proc/load_new_z(secret = FALSE)
 	var/x = round((world.maxx - width) * 0.5) + 1
