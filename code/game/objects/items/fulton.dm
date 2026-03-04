@@ -143,6 +143,19 @@ GLOBAL_LIST_EMPTY(deployed_fultons)
 	var/image/chute = image('icons/obj/structures/droppod_64x64.dmi', attached_atom, "chute_static")
 	var/corr_x = (attached_atom.pixel_x * -1)//This fixes a pixel offset bug with big sprites
 	I.pixel_x = corr_x
+
+	var/mob/living/attached_living = attached_atom
+	var/living_previous_dir
+	var/living_previous_rotate
+	if(istype(attached_living))
+		living_previous_dir = attached_living.dir
+		living_previous_rotate = attached_living.rotate_on_lying
+		attached_living.setDir(SOUTH)
+		attached_living.set_body_position(LYING_DOWN) // The guy is most likely dead so that will likely do nothing
+		if(living_previous_rotate)
+			attached_living.set_lying_angle(0) // Pretend we're lying but upright
+			attached_living.rotate_on_lying = FALSE
+
 	cables.pixel_x = corr_x
 	chute.pixel_x = corr_x - 16
 	chute.pixel_y = 16
@@ -151,10 +164,10 @@ GLOBAL_LIST_EMPTY(deployed_fultons)
 	var/originalLayer = attached_atom.layer
 	var/originalAlpha = attached_atom.alpha
 	attached_atom.layer = 100 //You want this above everything else because it flies up into the sky
-	animate(attached_atom, pixel_y = 10, time = 30, easing = BOUNCE_EASING)
+	animate(attached_atom, pixel_y = 10, time = 30, easing = BOUNCE_EASING, flags = ANIMATION_PARALLEL)
 	playsound(loc, 'sound/items/fulton.ogg', 50, 1)
 	sleep(30)
-	animate(attached_atom, pixel_y = 500, time = 50, alpha = 0, easing = CIRCULAR_EASING|EASE_OUT)
+	animate(attached_atom, pixel_y = 500, time = 50, alpha = 0, easing = CIRCULAR_EASING|EASE_OUT, flags = ANIMATION_PARALLEL)
 	playsound(loc, 'sound/items/fulton_takeoff.ogg', 50, 1)
 	sleep(50)
 	original_location = get_turf(attached_atom)
@@ -177,9 +190,15 @@ GLOBAL_LIST_EMPTY(deployed_fultons)
 
 	forceMove(attached_atom)
 	GLOB.deployed_fultons += src
-	attached_atom.overlays -= I
-	attached_atom.overlays -= cables
-	attached_atom.overlays -= chute
+
+	if(istype(attached_living))
+		attached_living.setDir(living_previous_dir)
+		// No need to update body position probably
+		if(living_previous_rotate)
+			attached_living.rotate_on_lying = living_previous_rotate
+			attached_living.update_transform(FALSE) // Undo lying angle change
+
+	attached_atom.overlays -= list(I, cables, chute)
 	attached_atom.layer = originalLayer
 	attached_atom.alpha = originalAlpha
 	addtimer(CALLBACK(src, PROC_REF(return_fulton), original_location), 150 SECONDS)
