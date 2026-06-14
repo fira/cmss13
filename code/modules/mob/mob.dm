@@ -18,6 +18,7 @@
 		mind = null
 
 	QDEL_NULL(skills)
+	QDEL_NULL(legcuffed)
 	QDEL_NULL_LIST(actions)
 	QDEL_NULL_LIST(viruses)
 	resistances?.Cut()
