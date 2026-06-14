@@ -949,3 +949,9 @@ GLOBAL_LIST_INIT(blacklisted_automated_baseturfs, typecacheof(list(
 	xeno_victim.Slow(1.5)
 	xeno_victim.Daze(1)
 
+/turf/proc/add_vomit_floor(mob/living/carbon/M, toxvomit = 0)
+	var/obj/effect/decal/cleanable/vomit/this = new /obj/effect/decal/cleanable/vomit(src)
+
+	// Make toxins vomit look different
+	if(toxvomit)
+		this.icon_state = "vomittox_[pick(1,4)]"

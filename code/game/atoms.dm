@@ -361,20 +361,6 @@ directive is properly returned.
 	if(A.fingerprintshidden && fingerprintshidden)
 		A.fingerprintshidden |= fingerprintshidden.Copy()
 
-
-
-
-/atom/proc/add_vomit_floor(mob/living/carbon/M, toxvomit = 0)
-	return
-
-/turf/add_vomit_floor(mob/living/carbon/M, toxvomit = 0)
-	var/obj/effect/decal/cleanable/vomit/this = new /obj/effect/decal/cleanable/vomit(src)
-
-	// Make toxins vomit look different
-	if(toxvomit)
-		this.icon_state = "vomittox_[pick(1,4)]"
-
-
 //Generalized Fire Proc.
 /atom/proc/flamer_fire_act(dam = BURN_LEVEL_TIER_1, datum/cause_data/flame_cause_data)
 	return
