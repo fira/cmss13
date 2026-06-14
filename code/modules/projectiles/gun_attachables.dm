@@ -4067,11 +4067,9 @@ Defined in conflicts.dm of the #defines folder.
 	mover.apply_effect(2, SLOW)
 
 
-//when user fires the gun, we check if they have something to support the gun's bipod.
-/obj/item/attachable/proc/check_bipod_support(obj/item/weapon/gun/gun, mob/living/user)
-	return 0
-
-/obj/item/attachable/bipod/check_bipod_support(obj/item/weapon/gun/gun, mob/living/user)
+/// when user fires the gun, we check if they have something to support the gun's bipod.
+/obj/item/attachable/bipod/proc/check_bipod_support(obj/item/weapon/gun/gun, mob/living/user)
+	RETURN_TYPE(/obj)
 	var/turf/T = get_turf(user)
 	for(var/obj/O in T)
 		if(O.throwpass && O.density && O.dir == user.dir && O.flags_atom & ON_BORDER)
@@ -4081,7 +4079,6 @@ Defined in conflicts.dm of the #defines folder.
 	for(var/obj/O2 in T2)
 		if(O2.throwpass && O2.density)
 			return O2
-	return 0
 
 //item actions for handling deployment to full auto.
 /datum/action/item_action/bipod/toggle_full_auto_switch/New(Target, obj/item/holder)
