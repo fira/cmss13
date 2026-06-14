@@ -140,14 +140,14 @@
 	var/recovery_constant = 1
 	var/a_intent = INTENT_HELP//Living
 	var/m_intent = MOVE_INTENT_RUN
-	var/lastKnownIP = null
-	var/obj/buckled = null//Living
-	var/obj/item/l_hand = null//Living
-	var/obj/item/r_hand = null//Living
-	var/obj/item/back = null//Human/Monkey
-	var/obj/item/tank/internal = null//Human/Monkey
-	var/obj/item/storage/s_active = null//Carbon
-	var/obj/item/wear_mask = null//Carbon
+	var/lastKnownIP
+	var/obj/buckled
+	var/obj/item/l_hand
+	var/obj/item/r_hand
+	var/obj/item/back
+	var/obj/item/tank/internal
+	var/obj/item/storage/s_active
+	var/obj/item/wear_mask
 
 	var/able_to_speak = TRUE
 
@@ -165,18 +165,26 @@
 
 	var/voice_name = "unidentifiable voice"
 
-	var/job = null // Internal job title used when mob is spawned. Preds are "Predator", Xenos are "Xenomorph", Marines have their actual job title
+	/// Internal job title used when mob is spawned. Preds are "Predator", Xenos are "Xenomorph", Marines have their actual job title
+	var/job
 	var/comm_title = ""
+
+	/// Main faction of the mob, used for some special access restrictions
 	var/faction = FACTION_NEUTRAL
-	var/faction_group
+	/// Faction group containing other factions the mob is associated to, notably used for IFF
+	var/list/faction_group
 
 	var/looc_overhead = FALSE
 
-	var/datum/skills/skills = null //the knowledge you have about certain abilities and actions (e.g. do you how to do surgery?)
-									//see skills.dm in #define folder and code/datums/skills.dm for more info
-	var/obj/item/restraint/legcuffs/legcuffed = null  //Same as handcuffs but for legs. Bear traps use this.
+	/**
+	  * the knowledge you have about certain abilities and actions (e.g. do you how to do surgery?)
+	  * see skills.dm in #define folder and code/datums/skills.dm for more info
+	*/
+	var/datum/skills/skills
 
-	var/list/viruses = list() //List of active diseases
+	var/obj/item/restraint/legcuffs/legcuffed  //! Same as handcuffs but for legs. Bear traps use this.
+
+	var/list/datum/disease/viruses = list() //! List of active diseases
 
 //Monkey/infected mode
 	var/list/resistances = list()
