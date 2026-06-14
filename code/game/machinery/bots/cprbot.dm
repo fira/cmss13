@@ -30,7 +30,8 @@
 	/// Cooldown for the random idle messages and medical facts
 	var/cooldown_time = 60 SECONDS
 	var/movement_delay = 4
-	var/owner
+	/// Mob owning the CPRbot, if applicable
+	var/mob/owner
 	var/fast_processing = FALSE
 	COOLDOWN_DECLARE(message_cooldown)
 
@@ -96,6 +97,23 @@
 	else
 		stop_processing()
 
+/// Set-up a new owner
+/obj/structure/machinery/bot/cprbot/proc/attach_to_owner(mob/user)
+	if(user == owner)
+		return
+	if(owner)
+		UnregisterSignal(owner, COMSIG_PARENT_QDELETING)
+	owner = user
+	if(user)
+		RegisterSignal(owner, COMSIG_PARENT_QDELETING, PROC_REF(clear_owner))
+
+
+/// Clear current owner if they get deleted
+/obj/structure/machinery/bot/cprbot/proc/clear_owner(datum/source)
+	SIGNAL_HANDLER
+	UnregisterSignal(owner, COMSIG_PARENT_QDELETING)
+	owner = null
+
 /obj/structure/machinery/bot/cprbot/proc/think()
 	switch (state)
 		if (STATE_CPRBOT_IDLE)
@@ -148,6 +166,7 @@
 		STOP_PROCESSING(SSobj, src)
 
 /obj/structure/machinery/bot/cprbot/Destroy()
+	clear_owner()
 	human = null
 	path = null
 	botcard_access = null
