@@ -49,6 +49,8 @@
 	item_verbs = null
 	luminosity_sources = null
 	focus = null
+	observers = null
+	click_intercept = null
 
 /mob/Initialize()
 	if(!faction_group)
