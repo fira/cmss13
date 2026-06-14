@@ -5,21 +5,21 @@ GLOBAL_PROTECT(href_token)
 
 /datum/admins
 	var/rank = "Temporary Admin"
-	var/list/extra_titles = null
-	var/client/owner = null
-	var/rights = 0
-	var/fakekey = null
+	var/list/extra_titles
+	var/client/owner
+	var/rights = NONE
+	var/fakekey
 
 	var/static/list/cached_admin_tokens = list()
 
 	var/href_token
 
-	var/datum/marked_datum
-	var/list/datum/tagged_datums
-
 	///Whether this admin is invisiminning
 	var/invisimined = FALSE
 
+	// TODO: Handle clearing of all of this for garbage collection
+	var/datum/marked_datum
+	var/list/datum/tagged_datums
 	var/datum/filter_editor/filteriffic
 	var/datum/particle_editor/particle_test
 
