@@ -6,12 +6,12 @@
 	var/active = FALSE
 	var/customizable = FALSE
 	var/datum/cause_data/cause_data
-	var/creator
 	//Is it harmful? Are they banned for synths?
 	var/harmful
 	//Should it be checked by antigrief?
 	var/antigrief_protection
 	//Below is used for customization
+	var/creator //! key_name() of the creator of this custom explosive, to be used for admin logging only
 	var/obj/item/device/assembly_holder/detonator = null
 	var/list/obj/containers = list()
 	var/list/allowed_sensors = list()
@@ -53,7 +53,6 @@
 
 /obj/item/explosive/Destroy()
 	cause_data = null
-	creator = null
 	QDEL_NULL(detonator)
 	QDEL_NULL_LIST(containers)
 	. = ..()
@@ -146,7 +145,7 @@
 			else
 				to_chat(user, SPAN_NOTICE("You lock the empty assembly."))
 			playsound(loc, 'sound/items/Screwdriver.ogg', 25, 0, 6)
-			creator = user
+			creator = key_name(user)
 			cause_data = create_cause_data(initial(name), user)
 			assembly_stage = ASSEMBLY_LOCKED
 		else if(assembly_stage == ASSEMBLY_LOCKED)
@@ -217,7 +216,7 @@
 	var/mob/cause_mob = cause_data?.resolve_mob()
 	if(cause_mob) //so we don't message for simulations
 		reagents.source_mob = WEAKREF(cause_mob)
-		msg_admin_niche("[key_name(cause_mob)] detonated custom explosive by [key_name(creator)]: [name] (REAGENTS: [reagent_list_text]) in [get_area(src)] [ADMIN_JMP(loc)]", loc.x, loc.y, loc.z)
+		msg_admin_niche("[key_name(cause_mob)] detonated custom explosive by [creator]: [name] (REAGENTS: [reagent_list_text]) in [get_area(src)] [ADMIN_JMP(loc)]", loc.x, loc.y, loc.z)
 
 	if(length(containers) < 2)
 		reagents.trigger_volatiles = TRUE //Explode on the first transfer
