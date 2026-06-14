@@ -859,6 +859,7 @@ note dizziness decrements automatically in the mob's Life() proc.
 	return FALSE
 
 /mob/living/proc/handle_statuses()
+	// Don't add more here. These should be ported to status_effect-s eventually
 	handle_stuttering()
 	handle_silent()
 	handle_drugged()
