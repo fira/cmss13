@@ -37,20 +37,23 @@
 
 	var/use_me = 1 //Allows all mobs to use the me verb by default, will have to manually specify they cannot
 	var/damageoverlaytemp = 0
-	var/computer_id = null //to track the players
+	var/computer_id //! Hardware ID, to track the players
 	var/list/attack_log = list( )
+
 	var/atom/movable/interactee //the thing that the mob is currently interacting with (e.g. a computer, another mob (stripping a mob), manning a hmg)
-	var/sdisabilities = 0 //Carbon
-	var/disabilities = 0 //Carbon
-	var/atom/movable/pulling = null
-	var/next_move = null
+	var/atom/movable/pulling
+
+	var/disabilities = NONE   //! Generic disabilities affecting this mob's capabilities
+	var/sdisabilities = NONE  //! Presumably, sensory disabilities (blindness, deafness, mute, currently)
+
+	var/next_move
 	var/next_move_slowdown = 0 // Amount added during the next movement_delay(), then is reset.
 	var/speed = 0 //Speed that modifies the movement delay of a given mob
 	var/recalculate_move_delay = TRUE // Whether move delay needs to be recalculated, on by default so that new mobs actually get movement delay calculated upon creation
 	var/crawling = FALSE
 	var/can_crawl = TRUE
-	var/monkeyizing = null //Carbon
-	var/hand = null
+	var/monkeyizing //Carbon
+	var/hand
 
 	// status effects that decrease over time \\
 
