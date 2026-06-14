@@ -96,7 +96,9 @@
 	/// Major internal organs, indexed by name
 	var/list/internal_organs_by_name = list()
 
-	var/chem_effect_flags = 0
+	/// Temporary global chemical effects affecting the mob (don't use this, use traits)
+	var/chem_effect_flags = NO_FLAGS
+	/// Ticking time to reset the chemical effects - amount in Life() ticks, so 8 is *about* 16 seconds...
 	var/chem_effect_reset_time = 8
 
 	var/command_aura_available = TRUE // Whether or not you can issue an order
@@ -123,11 +125,11 @@
 
 	var/datum/squad/assigned_squad //the squad this human is assigned to
 	var/assigned_fireteam = 0 //the fireteam this human is assigned to
-	var/squad_status = null //var for squad info window. Can be null, "M.I.A" and "K.I.A"
+	var/squad_status //! var for squad info window. Can be null, "M.I.A" and "K.I.A"
 	var/squad_primary_objective_ungarbled = TRUE
 	var/squad_secondary_objective_ungarbled = TRUE
 
-	//moved from IDs to prevent some exploits and to make points more flexible
+	/// Amount of points still available to the mob in gear vendors
 	var/vendor_points = MARINE_TOTAL_BUY_POINTS
 	var/vendor_snowflake_points = MARINE_TOTAL_SNOWFLAKE_POINTS
 	var/vendor_buyable_categories = MARINE_CAN_BUY_ALL
