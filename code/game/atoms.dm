@@ -1,14 +1,19 @@
 
 /atom
-	var/desc_lore = null
+	/// Extended lore description of the item (string)
+	var/desc_lore
 
 	plane = GAME_PLANE
 	layer = TURF_LAYER
+	/// Gamewise layer, for example to hide cabling or piping under the floor
 	var/level = 2
+
 	var/flags_atom = FPRINT
 
+	/// Admin log of who/when touched this with Ckey, for inspection via VV
 	var/list/fingerprintshidden
-	var/fingerprintslast = null
+	/// Ckey of the last person that touched this
+	var/fingerprintslast
 
 	/// determines whether or not the object can be destroyed by xeno acid
 	var/unacidable = FALSE
@@ -19,7 +24,7 @@
 
 	var/last_bumped = 0
 
-	// The cached datum for the permanent pass flags for any given atom
+	/// Cache of permanent pass_flags for an atom - this defines how objects can move through or around it
 	var/datum/pass_flags_container/pass_flags
 
 	// Temporary lags for what an atom can pass through
@@ -32,12 +37,15 @@
 	var/list/flags_can_pass_behind_temp
 
 	var/flags_barrier = NO_FLAGS
-	var/throwpass = 0
 
-	//Effects
-	var/list/effects_list
+	/// Controls a variety of random collision interactions (TODO remove this, this should be in pass_flags)
+	var/throwpass = FALSE
 
-	var/list/filter_data //For handling persistent filters
+	/// Effects applied to the atom (when possible, do not check for contents of the list, use signaling)
+	var/list/datum/effects/effects_list
+
+	/// Stores persistent filters : [name] -> [parameters list]
+	var/list/filter_data
 
 	/// Base transform matrix, edited by admin tooling and such
 	var/matrix/base_transform
@@ -46,10 +54,10 @@
 	var/matrix/raw_transform
 
 	///Chemistry.
-	var/datum/reagents/reagents = null
+	var/datum/reagents/reagents
 
 	//Z-Level Transitions
-	var/atom/movable/clone/clone = null
+	var/atom/movable/clone/clone
 
 	// Bitflag of which test cases this atom is exempt from
 	// See #define/tests.dm
