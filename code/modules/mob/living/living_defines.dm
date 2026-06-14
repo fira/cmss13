@@ -27,7 +27,7 @@
 	var/hushed = 0 // forced whispering, very annoying that silent exists but whatever
 
 	///a list of all status effects the mob has
-	var/list/status_effects
+	var/list/datum/status_effect/status_effects
 	/// Cooldown for manually toggling resting to avoid spamming
 	COOLDOWN_DECLARE(rest_cooldown)
 
@@ -40,9 +40,9 @@
 
 	var/cameraFollow = null
 
-	var/tod = null // Time of death
+	var/tod //! Time of death
 
-	var/silent = null //Can't talk. Value goes down every life proc.
+	var/silent //!Can't talk. Value goes down every life proc.
 
 	// Putting these here for attack_animal().
 	var/melee_damage_lower = 0
@@ -52,7 +52,7 @@
 	/// Custom sound if the mob gets slashed by a xenomorph
 	var/custom_slashed_sound
 	var/friendly = "nuzzles"
-	var/wall_smash = 0
+	var/wall_smash = FALSE //! If the mob can smash girders, walls and other such wall items
 
 	//Emotes
 	var/recent_audio_emote = FALSE
@@ -61,7 +61,7 @@
 	var/fire_stacks = 0 //Tracks how many stacks of fire we have on, max is
 	var/datum/reagent/fire_reagent
 
-	var/chestburst = 0 // 0: normal, 1: bursting, 2: bursted.
+	var/chestburst = 0 //! 0: normal, 1: bursting, 2: bursted.
 	var/first_xeno = FALSE //Are they the first wave of infected?
 	var/in_stasis = FALSE //Is the mob in stasis bag?
 
@@ -100,6 +100,7 @@
 	///How much blood the mob can have
 	var/limit_blood = BLOOD_VOLUME_MAXIMUM
 
+	/// Identifies the Xeno Hive this mob belongs or is affiliated to - string identifier
 	var/hivenumber
 
 	var/datum/pain/pain //Pain datum for the mob, set on New()
@@ -147,5 +148,5 @@
 	/// flipped icon_states for weed_food (needs to be the same length as weed_food_states)
 	var/list/weed_food_states_flipped = list("human_1_f","human_2_f","human_3_f","human_4_f","human_5_f")
 
-	// for multiz looking up
+	/// Disposable hologram atom we are currently observing, for looking up in Multi-Z
 	var/atom/observed_atom
