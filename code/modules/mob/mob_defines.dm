@@ -12,7 +12,9 @@
 	// An ID that uniquely identifies this mob through the full round
 	var/gid = 0
 
-	var/stat = 0 //Whether a mob is alive or dead. TODO: Move this to living - Nodrak
+	/// Current consciousness state of the mob, typically 0 = CONSCIOUS, 1 = UNCONSCIOUS, 2 = DEAD
+	var/stat = CONSCIOUS
+
 	var/chatWarn = 0 //Tracks how many times someone has spammed and gives them a no-no timer
 
 	var/atom/movable/screen/hands = null //robot
