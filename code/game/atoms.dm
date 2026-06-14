@@ -121,6 +121,7 @@ directive is properly returned.
 	QDEL_NULL(reagents)
 	QDEL_NULL(light)
 	fingerprintshidden = null
+	orbit_target = null
 	. = ..()
 
 //===========================================================================
