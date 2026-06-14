@@ -72,8 +72,6 @@
 	var/special_voice = "" // For changing our voice. Used by a symptom.
 
 	var/last_dam = -1 //Used for determining if we need to process all limbs or just some or even none.
-	/// Limbs actively being processed
-	var/list/obj/limb/limbs_to_process = list()
 
 	var/list/flavor_texts = list()
 	var/recently_nested = FALSE
@@ -91,8 +89,12 @@
 
 	var/holo_card_color = "" //which color type of holocard is printed on us
 
+	/// All lumbs attached to the human
 	var/list/obj/limb/limbs = list()
-	var/list/internal_organs_by_name = list() // so internal organs have less ickiness too
+	/// Limbs actively being processed
+	var/list/obj/limb/limbs_to_process = list()
+	/// Major internal organs, indexed by name
+	var/list/internal_organs_by_name = list()
 
 	var/chem_effect_flags = 0
 	var/chem_effect_reset_time = 8
