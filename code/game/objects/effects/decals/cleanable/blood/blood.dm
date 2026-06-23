@@ -62,10 +62,7 @@
 	if(GLOB.perf_flags & PERF_TOGGLE_NOBLOODPRINTS)
 		return
 
-	if(!H.bloody_footsteps)
-		H.AddElement(/datum/element/bloody_feet, dry_time_left, H.shoes, amount, color)
-	else
-		SEND_SIGNAL(H, COMSIG_HUMAN_BLOOD_CROSSED, amount, color, dry_time_left)
+	H.AddComponent(/datum/component/bloody_feet, dry_time_left, amount, color)
 
 /obj/effect/decal/cleanable/blood/proc/dry()
 	amount = 0

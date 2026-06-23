@@ -337,6 +337,10 @@
 /// If the table is being flipped, prevent any changes that will mess with adjacency handling
 #define TRAIT_TABLE_FLIPPING "t_table_flipping"
 
+// Turf traits
+/// Passing in this turf has cleaning effects
+#define TRAIT_TURF_CLEANS "t_turf_cleans"
+
 //List of all traits
 GLOBAL_LIST_INIT(mob_traits, list(
 	TRAIT_YAUTJA_TECH,

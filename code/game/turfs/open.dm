@@ -433,15 +433,15 @@
 	icon = 'icons/turf/floors/beach.dmi'
 	supports_surgery = FALSE
 
+/turf/open/beach/Initialize(mapload, ...)
+	. = ..()
+	ADD_TRAIT(src, TRAIT_TURF_CLEANS, TRAIT_SOURCE_INHERENT)
+
 /turf/open/beach/Entered(atom/movable/AM)
 	..()
 
 	if(AM.throwing || !ishuman(AM))
 		return
-
-	var/mob/living/carbon/human/H = AM
-	if(H.bloody_footsteps)
-		SEND_SIGNAL(H, COMSIG_HUMAN_CLEAR_BLOODY_FEET)
 
 
 /turf/open/beach/sand
@@ -731,6 +731,7 @@
 
 /turf/open/gm/river/Initialize(mapload, ...)
 	. = ..()
+	ADD_TRAIT(src, TRAIT_TURF_CLEANS, TRAIT_SOURCE_INHERENT)
 	update_icon()
 
 /turf/open/gm/river/update_icon()
@@ -777,11 +778,6 @@
 		river_slowdown = max(0, river_slowdown)
 
 		C.next_move_slowdown += river_slowdown
-
-	if(ishuman(AM))
-		var/mob/living/carbon/human/H = AM
-		if(H.bloody_footsteps)
-			SEND_SIGNAL(H, COMSIG_HUMAN_CLEAR_BLOODY_FEET)
 
 
 /turf/open/gm/river/proc/cleanup(mob/living/carbon/human/M)
