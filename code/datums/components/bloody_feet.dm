@@ -2,6 +2,8 @@
 /datum/component/bloody_feet
 	dupe_mode = COMPONENT_DUPE_UNIQUE_PASSARGS
 
+	/// Whether to start producing prints - normally activates after one move so the move that activated this doesn't also provide a print
+	var/active = FALSE
 	/// The amount of steps still left to take with bloody steps
 	var/steps_to_take
 	/// Color of the tracks left behind
@@ -9,8 +11,9 @@
 	/// Deletion timer if active
 	var/dry_timer
 
-/datum/component/bloody_feet/Initialize(dry_time, steps, bcolor)
+/datum/component/bloody_feet/Initialize(dry_time, steps, bcolor, active = FALSE)
 	. = ..()
+	// TODO FIX THIS NEEDING TO BE IN INHERIT
 	if(!ishuman(parent) || GLOB.perf_flags & PERF_TOGGLE_NOBLOODPRINTS)
 		return COMPONENT_INCOMPATIBLE
 
@@ -20,6 +23,7 @@
 
 	src.steps_to_take = steps
 	src.color = bcolor
+	src.active = active
 
 	if(dry_time)
 		dry_timer = addtimer(CALLBACK(src, PROC_REF(clear_blood)), dry_time, TIMER_STOPPABLE)
@@ -41,7 +45,10 @@
 		clear_blood()
 		return
 
-	INVOKE_ASYNC(src, PROC_REF(add_tracks), target, oldLoc, direction)
+	if(!active)
+		active = TRUE
+	else
+		add_tracks(target, oldLoc, direction)
 
 /datum/component/bloody_feet/proc/add_tracks(mob/living/carbon/human/target, oldLoc, direction)
 	var/turf/T_in = target.loc
