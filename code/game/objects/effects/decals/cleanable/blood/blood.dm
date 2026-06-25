@@ -59,9 +59,6 @@
 	if(drying_time)
 		dry_time_left = max(0, drying_time - (world.time - dry_start_time))
 
-	if(GLOB.perf_flags & PERF_TOGGLE_NOBLOODPRINTS)
-		return
-
 	H.AddComponent(/datum/component/bloody_feet, dry_time_left, amount, color)
 
 /obj/effect/decal/cleanable/blood/proc/dry()

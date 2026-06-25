@@ -1,7 +1,7 @@
 // Footprints, tire trails...
 /obj/effect/decal/cleanable/blood/tracks
 	icon = 'icons/effects/fluidtracks.dmi'
-	icon_state = "human2"
+	icon_state = ""
 	amount = 0
 	random_icon_states = null
 	var/coming_state="blood1"
@@ -25,12 +25,8 @@
 
 /obj/effect/decal/cleanable/blood/tracks/proc/add_tracks(direction, tcolor, out)
 	var/image/image = image(icon = icon, icon_state = out ? going_state : coming_state, dir = direction)
-
-	var/mutable_appearance/MA = new(image)
-	MA.color = tcolor
-	MA.layer = layer
-	MA.appearance_flags |= RESET_COLOR
-	image.appearance = MA
+	image.color = tcolor
+	image.layer = layer
 
 	switch(direction)
 		if(NORTH, SOUTH)

@@ -2,29 +2,41 @@
 /datum/component/bloody_feet
 	dupe_mode = COMPONENT_DUPE_UNIQUE_PASSARGS
 
-	/// Whether to start producing prints - normally activates after one move so the move that activated this doesn't also provide a print
-	var/active = FALSE
+	/// Deletion timer if active
+	var/dry_timer
+
 	/// The amount of steps still left to take with bloody steps
 	var/steps_to_take
 	/// Color of the tracks left behind
 	var/color
-	/// Deletion timer if active
-	var/dry_timer
 
-/datum/component/bloody_feet/Initialize(dry_time, steps, bcolor, active = FALSE)
+	// We also store the values for the NEXT queued blood prints
+	// This lets us apply the existing prints at the end of our current move, before we switch to new ones
+	// This is neccessary because the component is attached through Crossed, so before the previous move is finished
+	var/steps_to_take_next
+	var/color_next
+
+/datum/component/bloody_feet/Initialize(dry_time, steps, bcolor)
 	. = ..()
-	// TODO FIX THIS NEEDING TO BE IN INHERIT
 	if(!ishuman(parent) || GLOB.perf_flags & PERF_TOGGLE_NOBLOODPRINTS)
 		return COMPONENT_INCOMPATIBLE
 
+	// See above - Note that we start with _next too, so stepping into the poodle doesnt create tracks, only moving out of it after
+	src.steps_to_take_next = steps
+	src.color_next = bcolor
+	prime(dry_time)
+
+/datum/component/bloody_feet/InheritComponent(datum/component/C, i_am_original, dry_time, steps, bcolor, active)
+	. = ..()
+	src.steps_to_take_next = steps
+	src.color_next = bcolor
+	prime(dry_time)
+
+/// Starts drying process
+/datum/component/bloody_feet/proc/prime(dry_time = 0)
 	if(dry_timer)
 		deltimer(dry_timer)
-		dry_timer = null
-
-	src.steps_to_take = steps
-	src.color = bcolor
-	src.active = active
-
+		dry_time = null
 	if(dry_time)
 		dry_timer = addtimer(CALLBACK(src, PROC_REF(clear_blood)), dry_time, TIMER_STOPPABLE)
 
@@ -43,10 +55,6 @@
 
 	if(HAS_TRAIT(target_turf, TRAIT_TURF_CLEANS))
 		clear_blood()
-		return
-
-	if(!active)
-		active = TRUE
 	else
 		add_tracks(target, oldLoc, direction)
 
@@ -54,28 +62,35 @@
 	var/turf/T_in = target.loc
 	var/turf/T_out = oldLoc
 
-	// Someone please fix the stuff below later, i did my part
-	if(istype(T_in))
-		var/obj/effect/decal/cleanable/blood/tracks/footprints/FP = LAZYACCESS(T_in.cleanables, CLEANABLE_TRACKS)
-		if(FP)
-			var/image/I = LAZYACCESS(FP.steps_in, "[direction]")
-			if(!I)
+	if(steps_to_take)
+		if(istype(T_in))
+			var/obj/effect/decal/cleanable/blood/tracks/footprints/FP = LAZYACCESS(T_in.cleanables, CLEANABLE_TRACKS)
+			if(FP)
+				var/image/I = LAZYACCESS(FP.steps_in, "[direction]")
+				if(!I)
+					FP.add_tracks(direction, color, FALSE)
+			else
+				FP = new(T_in)
 				FP.add_tracks(direction, color, FALSE)
-		else
-			FP = new(T_in)
-			FP.add_tracks(direction, color, FALSE)
 
-	if(istype(T_out))
-		var/obj/effect/decal/cleanable/blood/tracks/footprints/FP = LAZYACCESS(T_out.cleanables, CLEANABLE_TRACKS)
-		if(FP)
-			var/image/I = LAZYACCESS(FP.steps_out, "[direction]")
-			if(!I)
+		if(istype(T_out))
+			var/obj/effect/decal/cleanable/blood/tracks/footprints/FP = LAZYACCESS(T_out.cleanables, CLEANABLE_TRACKS)
+			if(FP)
+				var/image/I = LAZYACCESS(FP.steps_out, "[direction]")
+				if(!I)
+					FP.add_tracks(direction, color, TRUE)
+			else
+				FP = new(T_out)
 				FP.add_tracks(direction, color, TRUE)
-		else
-			FP = new(T_out)
-			FP.add_tracks(direction, color, TRUE)
 
-	if(--steps_to_take <= 0)
+		steps_to_take--
+
+	if(steps_to_take_next) // Promote queued bloodprints to active
+		steps_to_take = steps_to_take_next
+		steps_to_take_next = 0
+		color = color_next
+
+	if(!steps_to_take)
 		qdel(src)
 
 /datum/component/bloody_feet/proc/clear_blood()
