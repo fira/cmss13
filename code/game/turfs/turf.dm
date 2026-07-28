@@ -342,13 +342,13 @@
 
 	return TRUE //Nothing found to block so return success!
 
-/turf/Entered(atom/movable/entered_movable, atom/old_loc)
+/turf/Entered(atom/movable/entered_movable, atom/OldLoc)
 	SHOULD_CALL_PARENT(TRUE)
 
 	..() // Shouldn't do anything but to satisfy lint
 
 	if(QDELETED(entered_movable))
-		return
+		return // Shouldn't be needed, we already fence it in Enter, but just in case
 
 	SEND_SIGNAL(src, COMSIG_TURF_ENTERED, entered_movable)
 	SEND_SIGNAL(entered_movable, COMSIG_MOVABLE_TURF_ENTERED, src)
