@@ -495,6 +495,17 @@
 	else if(ear_deaf)
 		on_deafness_gain()
 
+/// Creates or refresh a status effect trait_window of the given type
+/// Returns TRUE if the window is saturated, aka. you can't stack anymore of the effect before it ends
+/// Watch out, duration is in deciseconds, not in life ticks like legacy procs
+/mob/living/proc/refresh_trait_window(status_effect_type, duration)
+	var/datum/status_effect/trait_window/effect = has_status_effect(status_effect_type)
+	if(effect)
+		effect.refresh_traits(duration)
+	else
+		effect = apply_status_effect(status_effect_type, duration)
+	return effect.is_overflowing()
+
 /mob/living/proc/on_deafness_gain()
 	to_chat(src, SPAN_WARNING("You notice you can't hear anything... you're deaf!"))
 	// We should apply deafness here instead of in handle_regular_status_updates

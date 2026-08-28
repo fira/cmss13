@@ -230,11 +230,9 @@
 
 			var/knocked_down
 			if(attacking_xeno.attempt_tackle(src, tackle_mult, tackle_min_offset, tackle_max_offset))
-				var/strength = rand(attacking_xeno.tacklestrength_min, attacking_xeno.tacklestrength_max)
-				var/datum/status_effect/incapacitating/stun/stun = Stun(strength, resistible=TRUE)
-				var/stun_resisted = strength != stun.last_amount
+				var/strength = GetStunDuration(rand(attacking_xeno.tacklestrength_min, attacking_xeno.tacklestrength_max))
+				var/stun_resisted = refresh_trait_window(/datum/status_effect/trait_window/tackle, strength)
 				playsound(loc, 'sound/weapons/alien_knockdown.ogg', 25, stun_resisted ? 1.5 : 0)
-				KnockDown(stun.last_amount) // Purely for knockdown visuals. All the heavy lifting is done by Stun
 				attacking_xeno.visible_message(SPAN_DANGER("[attacking_xeno] tackles down [src]!"),
 				SPAN_DANGER("We tackle down [src]!"), null, 5, CHAT_TYPE_XENO_COMBAT)
 				SEND_SIGNAL(src, COMSIG_MOB_TACKLED_DOWN, attacking_xeno)
